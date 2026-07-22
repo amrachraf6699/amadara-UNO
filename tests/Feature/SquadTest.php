@@ -46,6 +46,19 @@ class SquadTest extends TestCase
         $this->assertDatabaseHas('squads', ['league_id' => $league->id, 'user_id' => $user->id, 'formation' => '4-3-3']);
     }
 
+    public function test_locked_squad_displays_formation_players_and_coach(): void
+    {
+        $user = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach($user); $this->players();
+        $this->actingAs($user)->postJson(route('squads.store', $league), $this->payload());
+
+        $this->actingAs($user)->get(route('squads.show', $league))
+            ->assertOk()
+            ->assertSee('Your locked squad.')
+            ->assertSee('Locked 4-3-3')
+            ->assertSee('Player 1')
+            ->assertSee('Player 12');
+    }
+
     public function test_a_player_cannot_be_reserved_twice_in_one_league(): void
     {
         $first = User::factory()->create(); $second = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach([$first->id, $second->id]); $this->players(24);

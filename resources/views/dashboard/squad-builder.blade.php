@@ -41,9 +41,32 @@
   <section class="mt-6 grid gap-6 lg:grid-cols-[1fr_280px]">
     <div id="pitch" class="relative min-h-[620px] overflow-hidden rounded-[30px] border border-white/15 bg-gradient-to-b from-emerald-700/80 to-emerald-900/90 p-5 shadow-uno sm:p-8">
       <div class="pointer-events-none absolute inset-5 rounded-2xl border-2 border-white/25 sm:inset-8"><div class="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/25"></div><div class="absolute left-0 right-0 top-1/2 border-t-2 border-white/25"></div><div class="absolute bottom-0 left-1/2 h-20 w-48 -translate-x-1/2 border-2 border-b-0 border-white/25"></div><div class="absolute left-1/2 top-0 h-20 w-48 -translate-x-1/2 border-2 border-t-0 border-white/25"></div></div>
-      <div id="slots" class="relative flex min-h-[560px] flex-col justify-between gap-5 py-4"></div>
+      @if ($locked)
+        <div class="relative flex min-h-[560px] flex-col justify-between gap-5 py-4">
+          @foreach (['forward' => 'Forward', 'midfielder' => 'Midfielder', 'defender' => 'Defender', 'goalkeeper' => 'Goalkeeper'] as $role => $roleLabel)
+            @php $roleSelections = $squad->selections->where('role', 'player')->filter(fn ($selection) => str_starts_with($selection->slot_key, $role) || ($role === 'goalkeeper' && $selection->slot_key === 'goalkeeper'))->sortBy('slot_key'); @endphp
+            @if ($roleSelections->isNotEmpty())
+              <div class="flex flex-wrap justify-center gap-3">
+                @foreach ($roleSelections as $selection)
+                  @php $player = $selection->footballPlayer; @endphp
+                  <div class="w-36 rounded-2xl border border-white/25 bg-black/20 p-3 text-center">
+                    <div class="mx-auto grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-uno-blue/30 text-uno-lime">
+                      @if ($player->image_url)<img src="{{ $player->image_url }}" alt="{{ $player->known_name ?: $player->name }}" class="h-full w-full object-cover">@else<i class="bx bx-user text-xl"></i>@endif
+                    </div>
+                    <strong class="mt-2 block truncate text-xs text-uno-lime">{{ $player->known_name ?: $player->name }}</strong>
+                    <span class="mt-1 inline-block rounded-full bg-uno-lime/15 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-uno-lime">{{ $player->position ?: $roleLabel }}</span>
+                    <small class="mt-1 block truncate text-[10px] text-white/45">{{ collect([$player->nationality, $player->age ? $player->age.' yrs' : null, $player->height_cm ? $player->height_cm.' cm' : null])->filter()->join(' · ') }}</small>
+                  </div>
+                @endforeach
+              </div>
+            @endif
+          @endforeach
+        </div>
+      @else
+        <div id="slots" class="relative flex min-h-[560px] flex-col justify-between gap-5 py-4"></div>
+      @endif
     </div>
-    <aside class="glass-panel rounded-3xl p-5 sm:p-6"><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Coach</p><p class="mt-2 text-sm text-white/45">Choose your coach from the same football data catalogue.</p><button type="button" data-slot="coach" class="slot-button mt-5 flex min-h-24 w-full items-center justify-center rounded-2xl border border-dashed border-white/25 bg-white/5 p-3 text-center text-sm font-bold text-white/55 hover:border-uno-lime hover:text-uno-lime">+ Select coach</button></aside>
+    <aside class="glass-panel rounded-3xl p-5 sm:p-6"><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Coach</p>@if ($locked) @php $coach = $squad->selections->firstWhere('role', 'coach')?->footballPlayer; @endphp @if ($coach)<div class="mt-5 rounded-2xl border border-white/15 bg-white/5 p-3 text-center"><div class="mx-auto grid h-14 w-14 place-items-center overflow-hidden rounded-full bg-uno-blue/30 text-uno-lime">@if ($coach->image_url)<img src="{{ $coach->image_url }}" alt="{{ $coach->known_name ?: $coach->name }}" class="h-full w-full object-cover">@else<i class="bx bx-user text-xl"></i>@endif</div><strong class="mt-2 block truncate text-sm text-uno-lime">{{ $coach->known_name ?: $coach->name }}</strong><span class="mt-1 inline-block rounded-full bg-uno-lime/15 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-uno-lime">Coach</span><small class="mt-1 block truncate text-[10px] text-white/45">{{ collect([$coach->nationality, $coach->age ? $coach->age.' yrs' : null, $coach->height_cm ? $coach->height_cm.' cm' : null])->filter()->join(' · ') }}</small></div>@endif @else<p class="mt-2 text-sm text-white/45">Choose your coach from the same football data catalogue.</p><button type="button" data-slot="coach" class="slot-button mt-5 flex min-h-24 w-full items-center justify-center rounded-2xl border border-dashed border-white/25 bg-white/5 p-3 text-center text-sm font-bold text-white/55 hover:border-uno-lime hover:text-uno-lime">+ Select coach</button>@endif</aside>
   </section>
   @if (!$locked)<button id="saveSquad" type="button" disabled class="mt-6 w-full rounded-2xl bg-uno-lime px-5 py-4 text-sm font-extrabold text-uno-navy opacity-40 transition hover:bg-white">Save and lock squad</button>@endif
 </main>
