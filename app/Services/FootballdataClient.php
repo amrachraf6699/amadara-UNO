@@ -42,6 +42,26 @@ class FootballdataClient
             return is_array($payload) ? $payload : [];
         }
 
+        // Some provider responses show `filters.search` for this endpoint and ignore `q`.
+        // Try the alternate parameter separately; sending both parameters causes provider 500s.
+        $alternate = $http->get('/players', [
+            'search' => $query,
+            'page' => $page,
+            'limit' => min($limit, 100),
+        ]);
+        $alternatePayload = $alternate->json();
+        Log::info('Footballdata players alternate search response', [
+            'query' => $query,
+            'page' => $page,
+            'limit' => $limit,
+            'status' => $alternate->status(),
+            'response' => $alternatePayload ?? $alternate->body(),
+        ]);
+
+        if (! $alternate->failed() && $alternate->json('success') !== false && $this->containsQuery($this->responsePlayers($alternatePayload), $query)) {
+            return is_array($alternatePayload) ? $alternatePayload : [];
+        }
+
         $fallback = $http->get('/search', ['q' => $query, 'type' => 'players', 'limit' => min($limit, 25)]);
         $fallbackPayload = $fallback->json();
         Log::info('Footballdata players fallback response', [
