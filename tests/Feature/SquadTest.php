@@ -7,6 +7,7 @@ use App\Models\League;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use App\Http\Middleware\VerifyCsrfToken;
 use Tests\TestCase;
 
@@ -62,5 +63,20 @@ class SquadTest extends TestCase
         $response = $this->actingAs($user)->getJson(route('squads.players.search', ['league' => $league, 'q' => 'moh']));
         $response->assertOk()->assertJsonPath('source', 'database');
         Http::assertNothingSent();
+    }
+
+    public function test_provider_players_are_unwrapped_cached_and_logged(): void
+    {
+        config(['services.footballdata.api_key' => 'test-key']);
+        $user = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach($user);
+        Http::fake(['https://footballdata.io/*' => Http::response(['success' => true, 'data' => ['players' => [
+            ['player_id' => 5001, 'player_name' => 'Mohamed Salah', 'position' => 'Forward', 'team' => ['team_name' => 'Liverpool']],
+        ]]], 200)]);
+        Log::spy();
+
+        $response = $this->actingAs($user)->getJson(route('squads.players.search', ['league' => $league, 'q' => 'salah']));
+        $response->assertOk()->assertJsonPath('results.0.id', 5001);
+        $this->assertDatabaseHas('football_players', ['provider_id' => 5001, 'name' => 'Mohamed Salah']);
+        Log::shouldHaveReceived('info')->withArgs(fn ($message, $context) => $message === 'Footballdata players search response' && $context['response']['data']['players'][0]['player_id'] === 5001);
     }
 }
