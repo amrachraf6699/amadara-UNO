@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class League extends Model
@@ -60,6 +61,16 @@ class League extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withTimestamps();
+    }
+
+    public function squads(): HasMany
+    {
+        return $this->hasMany(Squad::class);
+    }
+
+    public function selections(): HasMany
+    {
+        return $this->hasMany(SquadSelection::class);
     }
 
     public static function generateUniqueCode(): string

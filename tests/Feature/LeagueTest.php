@@ -53,9 +53,9 @@ class LeagueTest extends TestCase
             'status' => League::STATUS_YET_TO_START,
         ]);
 
-        $response->assertRedirect(route('dashboard.index'));
+        $response->assertRedirect(route('squads.show', $league = League::firstOrFail()));
         $this->assertDatabaseCount('leagues', 1);
-        $league = League::firstOrFail();
+        $league ??= League::firstOrFail();
         $this->assertMatchesRegularExpression('/^[A-Z0-9]{5}$/', $league->code);
         $this->assertDatabaseHas('league_user', ['league_id' => $league->id, 'user_id' => $user->id]);
     }
@@ -109,7 +109,7 @@ class LeagueTest extends TestCase
 
         $response = $this->actingAs($player)->post(route('leagues.join'), ['code' => strtolower($league->code)]);
 
-        $response->assertRedirect(route('dashboard.index'));
+        $response->assertRedirect(route('squads.show', $league));
         $this->assertDatabaseHas('league_user', ['league_id' => $league->id, 'user_id' => $player->id]);
     }
 

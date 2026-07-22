@@ -15,7 +15,7 @@ class LeagueController extends Controller
 {
     public function index(Request $request): View
     {
-        $leagues = $request->user()->leagues()->withCount('users')->latest('leagues.created_at')->get();
+        $leagues = $request->user()->leagues()->withCount('users')->with('squads')->latest('leagues.created_at')->get();
 
         return view('dashboard.index', [
             'leagues' => $leagues,
@@ -39,10 +39,10 @@ class LeagueController extends Controller
         $message = "{$league->name} was created. Your league code is {$league->code}.";
 
         if ($request->expectsJson()) {
-            return response()->json(['message' => $message, 'league' => $this->leaguePayload($league)], 201);
+            return response()->json(['message' => $message, 'league' => $this->leaguePayload($league), 'redirect_url' => route('squads.show', $league)], 201);
         }
 
-        return redirect()->route('dashboard.index')->with('status', $message);
+        return redirect()->route('squads.show', $league)->with('status', $message);
     }
 
     public function join(Request $request): RedirectResponse|JsonResponse
@@ -75,10 +75,10 @@ class LeagueController extends Controller
         $message = "You joined {$league->name}.";
 
         if ($request->expectsJson()) {
-            return response()->json(['message' => $message, 'league' => $this->leaguePayload($league)]);
+            return response()->json(['message' => $message, 'league' => $this->leaguePayload($league), 'redirect_url' => route('squads.show', $league)]);
         }
 
-        return redirect()->route('dashboard.index')->with('status', $message);
+        return redirect()->route('squads.show', $league)->with('status', $message);
     }
 
     /**

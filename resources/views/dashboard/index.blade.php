@@ -49,7 +49,7 @@
               <div><dt class="text-xs uppercase tracking-widest text-white/35">Starts</dt><dd class="mt-1 font-bold">{{ $league->start_at->format('M j, Y') }}</dd></div>
               <div><dt class="text-xs uppercase tracking-widest text-white/35">Ends</dt><dd class="mt-1 font-bold">{{ $league->end_at->format('M j, Y') }}</dd></div>
             </dl>
-            <div class="mt-6 flex items-center justify-between text-xs text-white/45"><span><i class="bx bx-group mr-1"></i>{{ $league->users_count }} / {{ $league->max_users }} users</span><span>{{ $league->start_at->format('H:i') }}</span></div>
+            <div class="mt-6 flex items-center justify-between text-xs text-white/45"><span><i class="bx bx-group mr-1"></i>{{ $league->users_count }} / {{ $league->max_users }} users</span><a href="{{ route('squads.show', $league) }}" class="font-bold text-uno-lime hover:text-white">{{ $league->squads->isNotEmpty() ? 'View locked squad' : 'Build squad' }} <i class="bx bx-right-arrow-alt"></i></a></div>
           </article>
         @endforeach
       </section>
@@ -133,6 +133,7 @@
         const response = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) { const errors = payload.errors ? Object.values(payload.errors).flat() : []; throw new Error(errors[0] || payload.message || 'Something went wrong. Please try again.'); }
+        if (payload.redirect_url) { window.location.href = payload.redirect_url; return; }
         appendLeague(payload.league);
         form.reset();
         if (form.id === 'createLeagueForm') { selectIcon(defaultIcon); endInput.min = ''; startInput.min = toLocalInputValue(new Date(Date.now() + 5 * 60 * 1000)); }
