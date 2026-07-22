@@ -19,15 +19,11 @@ class OAuthController extends Controller
     public function callback(Request $request)
     {
         if ($request->filled('error')) {
-            return redirect()->route('login')->with(
-                'error',
-                'Google sign-in was cancelled or denied.'
-            );
+            return $this->redirectToLoginWithError('Google sign-in was cancelled or denied.');
         }
 
         if (! $request->filled('code')) {
-            return redirect()->route('login')->with(
-                'error',
+            return $this->redirectToLoginWithError(
                 'Google sign-in did not return an authorization code. Please try again.'
             );
         }
@@ -68,5 +64,10 @@ class OAuthController extends Controller
         $request->session()->regenerate();
 
         return redirect()->intended(RouteServiceProvider::HOME)->with('status', 'Welcome back to Amadara UNO.');
+    }
+
+    private function redirectToLoginWithError(string $message)
+    {
+        return redirect()->route('login', ['oauth_error' => $message])->with('error', $message);
     }
 }
