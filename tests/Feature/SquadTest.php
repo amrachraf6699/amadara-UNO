@@ -80,14 +80,15 @@ class SquadTest extends TestCase
         Log::shouldHaveReceived('info')->withArgs(fn ($message, $context) => $message === 'Footballdata players search response' && $context['response']['data']['players'][0]['player_id'] === 5001);
     }
 
-    public function test_provider_search_sends_q_and_search_filters(): void
+    public function test_provider_search_uses_only_the_documented_q_filter(): void
     {
         config(['services.footballdata.api_key' => 'test-key']);
         $user = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach($user);
-        Http::fake(['https://footballdata.io/*' => Http::response(['success' => true, 'data' => [], 'meta' => ['filters' => ['search' => 'messi']]], 200)]);
+        Http::fake(['https://footballdata.io/*' => Http::response(['success' => true, 'data' => [], 'meta' => ['filters' => ['search' => null]]], 200)]);
 
         $this->actingAs($user)->getJson(route('squads.players.search', ['league' => $league, 'q' => 'messi']));
 
+        Http::assertSentCount(1);
         Http::assertSent(fn ($request) => $request->url() === 'https://footballdata.io/api/v1/players?q=messi&page=1&limit=10');
     }
 

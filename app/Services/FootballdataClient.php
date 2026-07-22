@@ -4,7 +4,6 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use RuntimeException;
 
 class FootballdataClient
@@ -38,45 +37,11 @@ class FootballdataClient
             'response' => $payload ?? $response->body(),
         ]);
 
-        if (! $response->failed() && $response->json('success') !== false && $this->containsQuery($this->responsePlayers($payload), $query)) {
-            return is_array($payload) ? $payload : [];
-        }
-
-        // Some provider responses show `filters.search` for this endpoint and ignore `q`.
-        // Try the alternate parameter separately; sending both parameters causes provider 500s.
-        $alternate = $http->get('/players', [
-            'search' => $query,
-            'page' => $page,
-            'limit' => min($limit, 100),
-        ]);
-        $alternatePayload = $alternate->json();
-        Log::info('Footballdata players alternate search response', [
-            'query' => $query,
-            'page' => $page,
-            'limit' => $limit,
-            'status' => $alternate->status(),
-            'response' => $alternatePayload ?? $alternate->body(),
-        ]);
-
-        if (! $alternate->failed() && $alternate->json('success') !== false && $this->containsQuery($this->responsePlayers($alternatePayload), $query)) {
-            return is_array($alternatePayload) ? $alternatePayload : [];
-        }
-
-        $fallback = $http->get('/search', ['q' => $query, 'type' => 'players', 'limit' => min($limit, 25)]);
-        $fallbackPayload = $fallback->json();
-        Log::info('Footballdata players fallback response', [
-            'query' => $query,
-            'page' => $page,
-            'limit' => $limit,
-            'status' => $fallback->status(),
-            'response' => $fallbackPayload ?? $fallback->body(),
-        ]);
-
-        if ($fallback->failed() || $fallback->json('success') === false) {
+        if ($response->failed() || $response->json('success') === false) {
             throw new RuntimeException('Football data provider request failed.');
         }
 
-        return is_array($fallbackPayload) ? $fallbackPayload : [];
+        return is_array($payload) ? $payload : [];
     }
 
     public function getPlayer(int $providerId): array
@@ -95,25 +60,4 @@ class FootballdataClient
         return is_array($payload['data'] ?? null) ? $payload['data'] : [];
     }
 
-    private function responsePlayers(?array $payload): array
-    {
-        if (! is_array($payload)) return [];
-        $data = $payload['data'] ?? null;
-        if (is_array($data) && array_is_list($data)) return $data;
-        $players = (is_array($data) ? ($data['players'] ?? $data['results'] ?? null) : null)
-            ?? $payload['players']
-            ?? $payload['results']
-            ?? $data
-            ?? $payload;
-        return is_array($players) && array_is_list($players) ? $players : [];
-    }
-
-    private function containsQuery(array $players, string $query): bool
-    {
-        $query = Str::lower($query);
-        return collect($players)->contains(function (array $player) use ($query): bool {
-            $name = $player['known_name'] ?? $player['player_name'] ?? $player['name'] ?? '';
-            return Str::contains(Str::lower($name), $query);
-        });
-    }
 }
