@@ -74,7 +74,7 @@ class SquadTest extends TestCase
         ]]], 200)]);
         Log::spy();
 
-        $response = $this->actingAs($user)->getJson(route('squads.players.search', ['league' => $league, 'q' => 'salah']));
+        $response = $this->actingAs($user)->getJson(route('squads.players.search', ['league' => $league, 'q' => 'messi']));
         $response->assertOk()->assertJsonPath('results.0.id', 5001)->assertJsonPath('results.0.known_name', 'Lionel Messi')->assertJsonPath('results.0.nationality', 'Argentina')->assertJsonPath('results.0.age', 39)->assertJsonPath('results.0.height_cm', 170)->assertJsonPath('results.0.position', 'Forward')->assertJsonPath('results.0.image_url', 'https://example.test/messi.png');
         $this->assertDatabaseHas('football_players', ['provider_id' => 5001, 'known_name' => 'Lionel Messi', 'height_cm' => 170]);
         Log::shouldHaveReceived('info')->withArgs(fn ($message, $context) => $message === 'Footballdata players search response' && $context['response']['data']['players'][0]['player_id'] === 5001);
@@ -88,6 +88,15 @@ class SquadTest extends TestCase
 
         $this->actingAs($user)->getJson(route('squads.players.search', ['league' => $league, 'q' => 'messi']));
 
-        Http::assertSent(fn ($request) => $request->url() === 'https://footballdata.io/api/v1/players?q=messi&search=messi&page=1&limit=10');
+        Http::assertSent(fn ($request) => $request->url() === 'https://footballdata.io/api/v1/players?q=messi&page=1&limit=10');
+    }
+
+    public function test_provider_errors_are_returned_as_a_controlled_search_error(): void
+    {
+        config(['services.footballdata.api_key' => 'test-key']);
+        $user = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach($user);
+        Http::fake(['https://footballdata.io/*' => Http::response(['success' => false], 500)]);
+
+        $this->actingAs($user)->getJson(route('squads.players.search', ['league' => $league, 'q' => 'suarez']))->assertStatus(503);
     }
 }

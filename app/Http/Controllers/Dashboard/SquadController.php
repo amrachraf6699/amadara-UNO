@@ -188,13 +188,13 @@ class SquadController extends Controller
 
     private function providerPlayers(array $data): array
     {
-        $players = $data['data']['players']
-            ?? $data['data']['results']
-            ?? $data['data']['items']
+        $dataSection = $data['data'] ?? null;
+        if (is_array($dataSection) && array_is_list($dataSection)) return $dataSection;
+        $players = (is_array($dataSection) ? ($dataSection['players'] ?? $dataSection['results'] ?? $dataSection['items'] ?? null) : null)
             ?? $data['players']
             ?? $data['results']
             ?? $data['items']
-            ?? $data['data']
+            ?? $dataSection
             ?? $data;
         return is_array($players) && array_is_list($players) ? $players : [];
     }
