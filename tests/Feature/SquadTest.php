@@ -79,4 +79,15 @@ class SquadTest extends TestCase
         $this->assertDatabaseHas('football_players', ['provider_id' => 5001, 'name' => 'Mohamed Salah']);
         Log::shouldHaveReceived('info')->withArgs(fn ($message, $context) => $message === 'Footballdata players search response' && $context['response']['data']['players'][0]['player_id'] === 5001);
     }
+
+    public function test_provider_search_sends_q_and_search_filters(): void
+    {
+        config(['services.footballdata.api_key' => 'test-key']);
+        $user = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach($user);
+        Http::fake(['https://footballdata.io/*' => Http::response(['success' => true, 'data' => [], 'meta' => ['filters' => ['search' => 'messi']]], 200)]);
+
+        $this->actingAs($user)->getJson(route('squads.players.search', ['league' => $league, 'q' => 'messi']));
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://footballdata.io/api/v1/players?q=messi&search=messi&page=1&limit=10');
+    }
 }

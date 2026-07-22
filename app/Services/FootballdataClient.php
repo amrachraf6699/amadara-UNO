@@ -20,7 +20,14 @@ class FootballdataClient
             ->acceptJson()
             ->timeout(8)
             ->retry(2, 150)
-            ->get('/players', ['q' => $query, 'page' => $page, 'limit' => min($limit, 100)]);
+            ->get('/players', [
+                // The provider currently exposes this filter as `search` in its response metadata,
+                // while its public documentation calls it `q`. Send both for compatibility.
+                'q' => $query,
+                'search' => $query,
+                'page' => $page,
+                'limit' => min($limit, 100),
+            ]);
 
         $payload = $response->json();
         Log::info('Footballdata players search response', [

@@ -213,7 +213,7 @@ class SquadController extends Controller
             'age' => isset($data['age']) && is_numeric($data['age']) ? $data['age'] : null,
             'team_provider_id' => $team['team_id'] ?? null,
             'team_name' => $team['team_name'] ?? $team['name'] ?? null,
-            'image_url' => $data['profile_image'] ?? $data['image'] ?? null,
+            'image_url' => $data['player_image'] ?? $data['profile_image'] ?? $data['image'] ?? null,
             'profile_url' => $data['profile_url'] ?? null,
             'raw_data' => $data,
         ]);
