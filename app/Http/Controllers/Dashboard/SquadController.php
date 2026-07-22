@@ -207,10 +207,14 @@ class SquadController extends Controller
         $team = $data['team'] ?? [];
         return FootballPlayer::updateOrCreate(['provider_id' => (int) $providerId], [
             'name' => $name,
+            'known_name' => $data['known_name'] ?? $name,
+            'first_name' => $data['first_name'] ?? null,
+            'last_name' => $data['last_name'] ?? null,
             'normalized_name' => Str::lower($name),
             'position' => $data['position'] ?? null,
             'nationality' => $data['nationality'] ?? null,
             'age' => isset($data['age']) && is_numeric($data['age']) ? $data['age'] : null,
+            'height_cm' => isset($data['height_cm']) && is_numeric($data['height_cm']) ? $data['height_cm'] : null,
             'team_provider_id' => $team['team_id'] ?? null,
             'team_name' => $team['team_name'] ?? $team['name'] ?? null,
             'image_url' => $data['player_image'] ?? $data['profile_image'] ?? $data['image'] ?? null,
@@ -221,6 +225,18 @@ class SquadController extends Controller
 
     private function playerPayload(FootballPlayer $player): array
     {
-        return ['id' => $player->provider_id, 'name' => $player->name, 'position' => $player->position, 'team_name' => $player->team_name, 'image_url' => $player->image_url];
+        return [
+            'id' => $player->provider_id,
+            'name' => $player->name,
+            'known_name' => $player->known_name ?: $player->name,
+            'first_name' => $player->first_name,
+            'last_name' => $player->last_name,
+            'nationality' => $player->nationality,
+            'age' => $player->age,
+            'height_cm' => $player->height_cm,
+            'position' => $player->position,
+            'team_name' => $player->team_name,
+            'image_url' => $player->image_url,
+        ];
     }
 }

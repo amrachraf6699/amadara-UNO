@@ -11,7 +11,7 @@ class FootballPlayer extends Model
     use HasFactory;
 
     protected $fillable = [
-        'provider_id', 'name', 'normalized_name', 'position', 'nationality', 'age',
+        'provider_id', 'name', 'known_name', 'first_name', 'last_name', 'normalized_name', 'position', 'nationality', 'age', 'height_cm',
         'team_provider_id', 'team_name', 'image_url', 'profile_url', 'raw_data',
     ];
 

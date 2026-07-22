@@ -70,13 +70,13 @@ class SquadTest extends TestCase
         config(['services.footballdata.api_key' => 'test-key']);
         $user = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach($user);
         Http::fake(['https://footballdata.io/*' => Http::response(['success' => true, 'data' => ['players' => [
-            ['player_id' => 5001, 'player_name' => 'Mohamed Salah', 'position' => 'Forward', 'team' => ['team_name' => 'Liverpool']],
+            ['player_id' => 5001, 'player_name' => 'Lionel Andrés Messi Cuccittini', 'known_name' => 'Lionel Messi', 'first_name' => 'Lionel Andrés', 'last_name' => 'Messi Cuccittini', 'nationality' => 'Argentina', 'age' => 39, 'height_cm' => 170, 'position' => 'Forward', 'player_image' => 'https://example.test/messi.png', 'team' => ['team_name' => 'Inter Miami']],
         ]]], 200)]);
         Log::spy();
 
         $response = $this->actingAs($user)->getJson(route('squads.players.search', ['league' => $league, 'q' => 'salah']));
-        $response->assertOk()->assertJsonPath('results.0.id', 5001);
-        $this->assertDatabaseHas('football_players', ['provider_id' => 5001, 'name' => 'Mohamed Salah']);
+        $response->assertOk()->assertJsonPath('results.0.id', 5001)->assertJsonPath('results.0.known_name', 'Lionel Messi')->assertJsonPath('results.0.nationality', 'Argentina')->assertJsonPath('results.0.age', 39)->assertJsonPath('results.0.height_cm', 170)->assertJsonPath('results.0.position', 'Forward')->assertJsonPath('results.0.image_url', 'https://example.test/messi.png');
+        $this->assertDatabaseHas('football_players', ['provider_id' => 5001, 'known_name' => 'Lionel Messi', 'height_cm' => 170]);
         Log::shouldHaveReceived('info')->withArgs(fn ($message, $context) => $message === 'Footballdata players search response' && $context['response']['data']['players'][0]['player_id'] === 5001);
     }
 
