@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -15,8 +16,22 @@ class OAuthController extends Controller
         return Socialite::driver('google')->redirect();
     }
 
-    public function callback()
+    public function callback(Request $request)
     {
+        if ($request->filled('error')) {
+            return redirect()->route('login')->with(
+                'error',
+                'Google sign-in was cancelled or denied.'
+            );
+        }
+
+        if (! $request->filled('code')) {
+            return redirect()->route('login')->with(
+                'error',
+                'Google sign-in did not return an authorization code. Please try again.'
+            );
+        }
+
         $socialiteUser = Socialite::driver('google')->stateless()->user();
 
         $user = User::query()
@@ -50,6 +65,7 @@ class OAuthController extends Controller
         $user->save();
 
         Auth::login($user, remember: true);
+        $request->session()->regenerate();
 
         return redirect()->intended(RouteServiceProvider::HOME)->with('status', 'Welcome back to Amadara UNO.');
     }

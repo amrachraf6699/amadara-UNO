@@ -94,6 +94,8 @@
 </head>
 
 <body class="min-h-screen text-uno-navy selection:bg-uno-green selection:text-white">
+    <x-toast.success />
+    <x-toast.error />
   <main class="pitch-grid relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
     <!-- Decorative elements -->
     <div class="pointer-events-none absolute -left-28 -top-28 h-80 w-80 rounded-full border border-white/10"></div>
