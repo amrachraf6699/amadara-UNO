@@ -17,7 +17,7 @@ class OAuthController extends Controller
 
     public function callback()
     {
-        $socialiteUser = Socialite::driver('google')->user();
+        $socialiteUser = Socialite::driver('google')->stateless()->user();
 
         $user = User::query()
             ->where('provider', 'google')
