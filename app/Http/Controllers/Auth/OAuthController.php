@@ -19,12 +19,12 @@ class OAuthController extends Controller
     public function callback(Request $request)
     {
         \Log::info('Google callback received', [
-            'method' => request()->method(),
-            'query' => request()->query(),
-            'input' => request()->all(),
+            'method' => $request->method(),
+            'raw_query_string' => $_SERVER['QUERY_STRING'] ?? null,
+            'php_get' => $_GET,
+            'laravel_query' => $request->query(),
+            'code' => $request->query('code'),
         ]);
-
-
         if ($request->filled('error')) {
             return $this->redirectToLoginWithError('Google sign-in was cancelled or denied.');
         }
