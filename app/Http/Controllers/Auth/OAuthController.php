@@ -18,13 +18,6 @@ class OAuthController extends Controller
 
     public function callback(Request $request)
     {
-        \Log::info('Google callback received', [
-            'method' => $request->method(),
-            'raw_query_string' => $_SERVER['QUERY_STRING'] ?? null,
-            'php_get' => $_GET,
-            'laravel_query' => $request->query(),
-            'code' => $request->query('code'),
-        ]);
         if ($request->filled('error')) {
             return $this->redirectToLoginWithError('Google sign-in was cancelled or denied.');
         }
@@ -47,8 +40,9 @@ class OAuthController extends Controller
             $existingUser = User::where('email', $socialiteUser->getEmail())->first();
 
             if ($existingUser) {
-                return redirect(RouteServiceProvider::HOME)
-                    ->with('error', 'You are not registered that way.');
+                return $this->redirectToLoginWithError(
+                    'An account with this email already uses password login. Please sign in with your password.'
+                );
             }
         }
 
