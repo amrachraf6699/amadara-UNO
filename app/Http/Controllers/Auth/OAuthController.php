@@ -18,13 +18,10 @@ class OAuthController extends Controller
 
     public function callback(Request $request)
     {
-        \Log::info('Google OAuth callback received', [
-            'full_url' => $request->fullUrl(),
-            'query' => $request->query(),
-            'code_present' => $request->filled('code'),
-            'error' => $request->query('error'),
-            'referer' => $request->header('referer'),
-            'session_id' => $request->session()->getId(),
+        \Log::info('Google callback received', [
+            'method' => request()->method(),
+            'query' => request()->query(),
+            'input' => request()->all(),
         ]);
 
 
