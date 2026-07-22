@@ -6,46 +6,53 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class OAuthController extends Controller
 {
-    private const STATE_COOKIE = 'google_oauth_state';
+    private const STATE_TTL = 600;
 
     public function redirect()
     {
-        $state = Str::random(40);
-        $stateSignature = hash_hmac('sha256', $state, (string) config('app.key'));
+        $nonce = Str::random(40);
+        $issuedAt = now()->timestamp;
+        $statePayload = $nonce.'|'.$issuedAt;
+        $state = $nonce.'.'.$issuedAt.'.'.hash_hmac(
+            'sha256',
+            $statePayload,
+            (string) config('app.key')
+        );
 
-        // Keep state outside the application session. This is important on hosts
-        // where the session storage or session cookie is not shared reliably
-        // between the redirect and the OAuth callback.
-        $response = Socialite::driver('google')
+        // Keep state self-contained so OAuth does not depend on shared session
+        // storage between the redirect and callback on production hosts.
+        return Socialite::driver('google')
             ->stateless()
             ->with(['state' => $state])
             ->redirect();
-
-        return $response->withCookie($this->stateCookie($stateSignature));
     }
 
     public function callback(Request $request)
     {
         $state = (string) $request->query('state', '');
-        $expectedSignature = (string) $request->cookie(self::STATE_COOKIE, '');
+        $stateParts = explode('.', $state, 3);
+        $nonce = $stateParts[0] ?? '';
+        $issuedAt = $stateParts[1] ?? '';
+        $signature = $stateParts[2] ?? '';
+        $statePayload = $nonce.'|'.$issuedAt;
+        $isFresh = ctype_digit($issuedAt)
+            && abs(now()->timestamp - (int) $issuedAt) <= self::STATE_TTL;
 
-        if (! $state || ! $expectedSignature || ! hash_equals(
-            $expectedSignature,
-            hash_hmac('sha256', $state, (string) config('app.key'))
+        if (! $nonce || ! $signature || ! $isFresh || ! hash_equals(
+            $signature,
+            hash_hmac('sha256', $statePayload, (string) config('app.key'))
         )) {
             return redirect()->route('login')
-                ->withCookie(Cookie::forget(self::STATE_COOKIE))
                 ->with('error', 'Your Google sign-in session expired. Please try again.');
         }
 
-        // State has been validated above, so Socialite does not need the
+        // State has been validated above, so Socialite does not need its
         // session-backed validator that fails on some production hosts.
         $socialiteUser = Socialite::driver('google')->stateless()->user();
 
@@ -60,7 +67,6 @@ class OAuthController extends Controller
 
             if ($existingUser) {
                 return redirect()->route('login')
-                    ->withCookie(Cookie::forget(self::STATE_COOKIE))
                     ->with('error', 'You are not registered that way.');
             }
         }
@@ -84,24 +90,6 @@ class OAuthController extends Controller
         $request->session()->regenerate();
 
         return redirect()->intended(RouteServiceProvider::HOME)
-            ->withCookie(Cookie::forget(self::STATE_COOKIE))
             ->with('status', 'Welcome back to Amadara UNO.');
-    }
-
-    private function stateCookie(string $signature)
-    {
-        $secure = app()->environment('production') || request()->isSecure();
-
-        return cookie(
-            self::STATE_COOKIE,
-            $signature,
-            10,
-            '/',
-            config('session.domain'),
-            $secure,
-            true,
-            false,
-            'lax'
-        );
     }
 }
