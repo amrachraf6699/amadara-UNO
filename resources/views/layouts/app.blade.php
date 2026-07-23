@@ -47,6 +47,9 @@
     .fixture-nav { display: inline-flex; align-items: center; gap: .35rem; border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: .55rem .7rem; color: rgba(255,255,255,.65); font-size: .72rem; font-weight: 800; transition: border-color .2s ease, color .2s ease, background .2s ease; }
     .fixture-nav:hover:not(:disabled) { border-color: rgba(125,237,25,.55); background: rgba(125,237,25,.1); color: #d8ff5f; }
     .fixture-nav:disabled { cursor: not-allowed; opacity: .35; }
+    .match-details summary::-webkit-details-marker { display: none; }
+    .match-details[open] summary { color: #d8ff5f; }
+    .match-details[open] summary i { transform: rotate(180deg); }
     .results-table-wrap { overflow-x: auto; border: 1px solid rgba(255,255,255,.1); border-radius: 24px; background: rgba(255,255,255,.03); }
     .results-table { border-collapse: separate; border-spacing: 0; }
     .results-table thead { background: rgba(255,255,255,.05); color: rgba(255,255,255,.4); font-size: .7rem; text-transform: uppercase; letter-spacing: .12em; }
@@ -180,6 +183,19 @@
       .hud-results .results-table th, .hud-results .results-table td { display: table-cell; min-height: 0; padding: .75rem .85rem; }
       .hud-results .results-table td::before { content: none; }
       .results-table-wrap { border-radius: 20px; }
+      .hud-results table.results-table { display: table; width: 100%; min-width: 0 !important; table-layout: fixed; }
+      .hud-results table.results-table th, .hud-results table.results-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: .7rem .45rem; font-size: .72rem; }
+      .hud-results table.results-table th { font-size: .58rem; letter-spacing: .08em; }
+      .hud-results table.results-table th:first-child, .hud-results table.results-table td:first-child { width: 9%; }
+      .hud-results table.results-table th:nth-child(2), .hud-results table.results-table td:nth-child(2) { width: 37%; }
+      .hud-results table.results-table th:nth-child(n+3), .hud-results table.results-table td:nth-child(n+3) { text-align: center; }
+      .hud-results table.standings-table th:nth-child(n+3), .hud-results table.standings-table td:nth-child(n+3) { width: 8%; }
+      .hud-results table.standings-table th:last-child, .hud-results table.standings-table td:last-child { width: 14%; }
+      .hud-results table.scorers-table th:nth-child(2), .hud-results table.scorers-table td:nth-child(2) { width: 43%; }
+      .hud-results table.scorers-table th:nth-child(3), .hud-results table.scorers-table td:nth-child(3) { width: 31%; }
+      .hud-results table.scorers-table th:last-child, .hud-results table.scorers-table td:last-child { width: 17%; }
+      .hud-results table.results-table .team-avatar-sm { width: 2rem; height: 2rem; }
+      .hud-results table.results-table td:nth-child(2) > span { max-width: 100%; }
     }
     @media (max-width: 420px) {
       header nav { padding-left: .75rem; padding-right: .75rem; }

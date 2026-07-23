@@ -11,51 +11,58 @@
       'running' => 'Running',
       'finished' => 'Finished',
     ];
-    $activeLeagues = $leagues->whereIn('status', ['yet_to_start', 'running'])->count();
-    $readySquads = $leagues->sum('ready_users_count');
-    $finishedLeagues = $leagues->where('status', 'finished')->count();
   @endphp
 
   <main class="mx-auto min-h-[calc(100vh-150px)] max-w-7xl px-4 py-8 lg:px-8 lg:py-14">
     <div class="flex flex-wrap items-end justify-between gap-6">
       <div>
-        <p class="hud-kicker">Season control center</p>
         <h1 class="hud-title mt-3 text-4xl font-black sm:text-6xl">Your leagues<span class="text-uno-lime">.</span></h1>
-        <p class="mt-4 max-w-xl text-sm leading-7 text-white/55 sm:text-base">Track your competitions, lock your squad, and own the next matchday.</p>
       </div>
       @if(!$leagues->isEmpty())
-      <button id="newLeagueButton" type="button" class="hud-action px-5 py-3 text-sm">
-        <i class="bx bx-plus mr-1 align-middle text-lg"></i> New league
-      </button>
-      <button type="button" data-show-join class="hud-secondary-action px-5 py-3 text-sm"><i class="bx bx-log-in-circle mr-1 align-middle text-lg"></i> Join league</button>
+        <button id="newLeagueButton" type="button" class="hud-action px-5 py-3 text-sm">
+          <i class="bx bx-plus mr-1 align-middle text-lg"></i> New league
+        </button>
+        <button type="button" data-show-join class="hud-secondary-action px-5 py-3 text-sm"><i
+            class="bx bx-log-in-circle mr-1 align-middle text-lg"></i> Join league</button>
       @endif
     </div>
 
-    <section class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Season metrics">
-      <div class="hud-panel p-5"><p class="hud-kicker">Competitions</p><p class="hud-number mt-3 text-4xl font-black text-white">{{ $leagues->count() }}</p><p class="mt-1 text-xs text-white/40">Total leagues</p></div>
-      <div class="hud-panel p-5"><p class="hud-kicker">Live board</p><p class="hud-number mt-3 text-4xl font-black text-uno-lime">{{ $activeLeagues }}</p><p class="mt-1 text-xs text-white/40">Active competitions</p></div>
-      <div class="hud-panel p-5"><p class="hud-kicker">Ready squads</p><p class="hud-number mt-3 text-4xl font-black text-sky-300">{{ $readySquads }}</p><p class="mt-1 text-xs text-white/40">Across your leagues</p></div>
-      <div class="hud-panel p-5"><p class="hud-kicker">Hall of fame</p><p class="hud-number mt-3 text-4xl font-black text-white">{{ $finishedLeagues }}</p><p class="mt-1 text-xs text-white/40">Finished competitions</p></div>
-    </section>
-
     @if ($leagues->isEmpty())
       <section id="emptyLeaguesState" class="hud-panel mt-10 px-6 py-16 text-center sm:px-10">
-        <div class="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-uno-blue/20 text-4xl text-uno-lime"><i class="bx bx-trophy"></i></div>
+        <div class="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-uno-blue/20 text-4xl text-uno-lime"><i
+            class="bx bx-trophy"></i></div>
         <h2 class="mt-6 text-2xl font-bold">Your next competition starts here.</h2>
-        <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-white/50">Create a league for your squad or join an existing competition with its five-character code.</p>
-        <button type="button" data-open-new-league class="mt-7 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy">New League</button>
+        <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-white/50">Create a league for your squad or join an existing
+          competition with its five-character code.</p>
+        <button type="button" data-open-new-league
+          class="mt-7 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy">New
+          League</button>
       </section>
     @else
       <section id="leaguesGrid" class="mt-10" aria-label="Your participating leagues">
-        <div class="mb-5 flex items-end justify-between gap-4"><div><p class="hud-kicker">Competition lobby</p><h2 class="hud-title mt-2 text-2xl font-black">Your fixtures.</h2></div><span class="hud-status" data-status="running">{{ $leagues->count() }} slots</span></div>
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           @foreach ($leagues as $league)
             @php $readyPercent = $league->users_count ? round(($league->ready_users_count / $league->users_count) * 100) : 0; @endphp
             <article class="hud-league-card group relative overflow-hidden p-5 sm:p-6">
-              <div class="flex items-start justify-between gap-4"><span class="hud-icon-frame h-14 w-14 text-3xl"><i class="{{ $league->icon }}"></i></span><span class="hud-status" data-status="{{ $league->status }}">{{ $statusLabels[$league->status] ?? str_replace('_', ' ', ucfirst($league->status)) }}</span></div>
-              <div class="mt-6"><h3 class="truncate text-2xl font-black text-white">{{ $league->name }}</h3><div class="mt-2 flex items-center gap-2 text-xs text-white/40"><i class="bx bx-key text-uno-lime"></i><span class="tracking-[.25em] text-uno-lime">{{ $league->code }}</span><span>•</span><span>{{ $league->users_count }} / {{ $league->max_users }} players</span></div></div>
-              <div class="mt-6"><div class="flex items-center justify-between text-xs font-bold"><span class="text-white/45">Ready squads</span><span class="text-uno-lime">{{ $league->ready_users_count }} / {{ $league->users_count }}</span></div><div class="hud-meter mt-2"><span style="width: {{ $readyPercent }}%"></span></div></div>
-              <a href="{{ route('leagues.show', $league) }}" class="hud-card-action mt-6 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[.04] px-4 py-3 text-sm font-extrabold text-white transition group-hover:border-uno-lime/35 group-hover:bg-uno-lime group-hover:text-uno-navy"><span>{{ $league->status === 'yet_to_start' ? 'Open lobby' : 'Open results' }}</span><i class="bx bx-right-arrow-alt text-xl"></i></a>
+              <div class="flex items-start justify-between gap-4"><span class="hud-icon-frame h-14 w-14 text-3xl"><i
+                    class="{{ $league->icon }}"></i></span><span class="hud-status"
+                  data-status="{{ $league->status }}">{{ $statusLabels[$league->status] ?? str_replace('_', ' ', ucfirst($league->status)) }}</span>
+              </div>
+              <div class="mt-6">
+                <h3 class="truncate text-2xl font-black text-white">{{ $league->name }}</h3>
+                <div class="mt-2 flex items-center gap-2 text-xs text-white/40"><i class="bx bx-key text-uno-lime"></i><span
+                    class="tracking-[.25em] text-uno-lime">{{ $league->code }}</span><span>•</span><span>{{ $league->users_count }}
+                    / {{ $league->max_users }} players</span></div>
+              </div>
+              <div class="mt-6">
+                <div class="flex items-center justify-between text-xs font-bold"><span class="text-white/45">Ready
+                    squads</span><span class="text-uno-lime">{{ $league->ready_users_count }} /
+                    {{ $league->users_count }}</span></div>
+                <div class="hud-meter mt-2"><span style="width: {{ $readyPercent }}%"></span></div>
+              </div>
+              <a href="{{ route('leagues.show', $league) }}"
+                class="hud-card-action mt-6 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[.04] px-4 py-3 text-sm font-extrabold text-white transition group-hover:border-uno-lime/35 group-hover:bg-uno-lime group-hover:text-uno-navy"><span>{{ $league->status === 'yet_to_start' ? 'Open lobby' : 'Open results' }}</span><i
+                  class="bx bx-right-arrow-alt text-xl"></i></a>
             </article>
           @endforeach
         </div>
@@ -63,37 +70,115 @@
     @endif
   </main>
 
-  <div id="leagueOptionsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#020b15]/80 px-5 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="leagueOptionsTitle">
+  <div id="leagueOptionsModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-[#020b15]/80 px-5 backdrop-blur-sm" role="dialog"
+    aria-modal="true" aria-labelledby="leagueOptionsTitle">
     <div class="glass-panel w-full max-w-md rounded-[28px] p-6 shadow-uno sm:p-8">
-      <div class="flex items-start justify-between"><div><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">League room</p><h2 id="leagueOptionsTitle" class="mt-2 text-2xl font-bold">What are we doing?</h2></div><button type="button" data-close-modal class="text-2xl text-white/45 hover:text-white" aria-label="Close modal"><i class="bx bx-x"></i></button></div>
-      <div class="mt-8 grid gap-3"><button type="button" data-show-create class="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-uno-lime/50 hover:bg-uno-lime/10"><i class="bx bx-plus-circle text-3xl text-uno-lime"></i><span><strong class="block">Create a league</strong><small class="text-white/45">Start a new competition for your squad.</small></span></button><button type="button" data-show-join class="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-uno-blue/60 hover:bg-uno-blue/10"><i class="bx bx-log-in-circle text-3xl text-sky-300"></i><span><strong class="block">Join a league</strong><small class="text-white/45">Enter a code from a league captain.</small></span></button></div>
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">League room</p>
+          <h2 id="leagueOptionsTitle" class="mt-2 text-2xl font-bold">What are we doing?</h2>
+        </div><button type="button" data-close-modal class="text-2xl text-white/45 hover:text-white"
+          aria-label="Close modal"><i class="bx bx-x"></i></button>
+      </div>
+      <div class="mt-8 grid gap-3"><button type="button" data-show-create
+          class="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-uno-lime/50 hover:bg-uno-lime/10"><i
+            class="bx bx-plus-circle text-3xl text-uno-lime"></i><span><strong class="block">Create a
+              league</strong><small class="text-white/45">Start a new competition for your
+              squad.</small></span></button><button type="button" data-show-join
+          class="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-uno-blue/60 hover:bg-uno-blue/10"><i
+            class="bx bx-log-in-circle text-3xl text-sky-300"></i><span><strong class="block">Join a league</strong><small
+              class="text-white/45">Enter a code from a league captain.</small></span></button></div>
     </div>
   </div>
 
-  <div id="createLeagueModal" class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto bg-[#020b15]/80 px-3 py-4 backdrop-blur-sm sm:px-5 sm:py-8" role="dialog" aria-modal="true" aria-labelledby="createLeagueTitle">
-    <div class="glass-panel max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[24px] p-5 shadow-uno sm:max-h-none sm:rounded-[28px] sm:p-8">
-      <div class="flex items-start justify-between"><div><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">New competition</p><h2 id="createLeagueTitle" class="mt-2 text-2xl font-bold">Create a league</h2></div><button type="button" data-close-modal class="text-2xl text-white/45 hover:text-white" aria-label="Close modal"><i class="bx bx-x"></i></button></div>
-      <form id="createLeagueForm" class="mt-6 space-y-4 sm:mt-7 sm:space-y-5" method="POST" action="{{ route('leagues.store') }}" enctype="multipart/form-data">
+  <div id="createLeagueModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto bg-[#020b15]/80 px-3 py-4 backdrop-blur-sm sm:px-5 sm:py-8"
+    role="dialog" aria-modal="true" aria-labelledby="createLeagueTitle">
+    <div
+      class="glass-panel max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[24px] p-5 shadow-uno sm:max-h-none sm:rounded-[28px] sm:p-8">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">New competition</p>
+          <h2 id="createLeagueTitle" class="mt-2 text-2xl font-bold">Create a league</h2>
+        </div><button type="button" data-close-modal class="text-2xl text-white/45 hover:text-white"
+          aria-label="Close modal"><i class="bx bx-x"></i></button>
+      </div>
+      <form id="createLeagueForm" class="mt-6 space-y-4 sm:mt-7 sm:space-y-5" method="POST"
+        action="{{ route('leagues.store') }}" enctype="multipart/form-data">
         @csrf
-        <div><label for="league-name" class="mb-2 block text-sm font-bold">League name</label><input id="league-name" name="name" value="{{ old('name') }}" required class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime" placeholder="e.g. Friday Night League"></div>
-        <div><span class="mb-2 block text-sm font-bold">Choose an icon</span><input id="league-icon" type="hidden" name="icon" value="{{ old('icon', $leagueIcons[0]) }}"><div class="icon-picker flex max-w-full gap-2 overflow-x-auto pb-2">@foreach ($leagueIcons as $icon)<button type="button" data-icon="{{ $icon }}" class="icon-option grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-2xl text-white/60 transition hover:border-uno-lime/60 hover:text-uno-lime" aria-label="Choose {{ $icon }}"><i class="{{ $icon }}"></i></button>@endforeach</div></div>
-        <div><label for="max-users" class="mb-2 block text-sm font-bold">Maximum users</label><input id="max-users" name="max_users" type="number" min="2" max="10000" value="{{ old('max_users', 10) }}" required class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime"></div>
-        <div><label for="create-team-name" class="mb-2 block text-sm font-bold">Your team name</label><input id="create-team-name" name="team_name" value="{{ old('team_name') }}" maxlength="80" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime" placeholder="e.g. Amr United"><p class="mt-2 text-xs text-white/40">This appears in this league instead of your account name.</p></div>
-        <div><label for="create-team-logo" class="mb-2 block text-sm font-bold">Team logo <span class="font-normal text-white/40">(optional)</span></label><input id="create-team-logo" name="team_logo" type="file" accept="image/jpeg,image/png,image/webp" class="block w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-uno-lime file:px-3 file:py-2 file:text-xs file:font-bold file:text-uno-navy"></div>
-        <div class="flex flex-col-reverse gap-3 border-t border-white/10 pt-4 sm:flex-row sm:justify-end sm:pt-5"><button type="button" data-close-modal class="w-full rounded-xl border border-white/15 px-5 py-3 text-sm font-bold text-white/70 hover:bg-white/10 sm:w-auto">Cancel</button><button type="submit" class="inline-flex w-full items-center justify-center rounded-xl bg-uno-lime px-5 py-3 text-sm font-extrabold text-uno-navy hover:bg-white sm:w-auto">Create league <i class="bx bx-right-arrow-alt align-middle text-lg"></i></button></div>
+        <div><label for="league-name" class="mb-2 block text-sm font-bold">League name</label><input id="league-name"
+            name="name" value="{{ old('name') }}" required
+            class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime"
+            placeholder="e.g. Friday Night League"></div>
+        <div><span class="mb-2 block text-sm font-bold">Choose an icon</span><input id="league-icon" type="hidden"
+            name="icon" value="{{ old('icon', $leagueIcons[0]) }}">
+          <div class="icon-picker flex max-w-full gap-2 overflow-x-auto pb-2">@foreach ($leagueIcons as $icon)<button
+            type="button" data-icon="{{ $icon }}"
+            class="icon-option grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-2xl text-white/60 transition hover:border-uno-lime/60 hover:text-uno-lime"
+          aria-label="Choose {{ $icon }}"><i class="{{ $icon }}"></i></button>@endforeach</div>
+        </div>
+        <div><label for="max-users" class="mb-2 block text-sm font-bold">Maximum users</label><input id="max-users"
+            name="max_users" type="number" min="2" max="10000" value="{{ old('max_users', 10) }}" required
+            class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime">
+        </div>
+        <div><label for="create-team-name" class="mb-2 block text-sm font-bold">Your team name</label><input
+            id="create-team-name" name="team_name" value="{{ old('team_name') }}" maxlength="80"
+            class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime"
+            placeholder="e.g. Amr United">
+          <p class="mt-2 text-xs text-white/40">This appears in this league instead of your account name.</p>
+        </div>
+        <div><label for="create-team-logo" class="mb-2 block text-sm font-bold">Team logo <span
+              class="font-normal text-white/40">(optional)</span></label><input id="create-team-logo" name="team_logo"
+            type="file" accept="image/jpeg,image/png,image/webp"
+            class="block w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-uno-lime file:px-3 file:py-2 file:text-xs file:font-bold file:text-uno-navy">
+        </div>
+        <div class="flex flex-col-reverse gap-3 border-t border-white/10 pt-4 sm:flex-row sm:justify-end sm:pt-5"><button
+            type="button" data-close-modal
+            class="w-full rounded-xl border border-white/15 px-5 py-3 text-sm font-bold text-white/70 hover:bg-white/10 sm:w-auto">Cancel</button><button
+            type="submit"
+            class="inline-flex w-full items-center justify-center rounded-xl bg-uno-lime px-5 py-3 text-sm font-extrabold text-uno-navy hover:bg-white sm:w-auto">Create
+            league <i class="bx bx-right-arrow-alt align-middle text-lg"></i></button></div>
       </form>
     </div>
   </div>
 
-  <div id="joinLeagueModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#020b15]/80 px-3 backdrop-blur-sm sm:px-5" role="dialog" aria-modal="true" aria-labelledby="joinLeagueTitle">
+  <div id="joinLeagueModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-[#020b15]/80 px-3 backdrop-blur-sm sm:px-5"
+    role="dialog" aria-modal="true" aria-labelledby="joinLeagueTitle">
     <div class="glass-panel w-full max-w-md rounded-[24px] p-5 shadow-uno sm:rounded-[28px] sm:p-8">
-      <div class="flex items-start justify-between"><div><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Join competition</p><h2 id="joinLeagueTitle" class="mt-2 text-2xl font-bold">Enter the league code</h2></div><button type="button" data-close-modal class="text-2xl text-white/45 hover:text-white" aria-label="Close modal"><i class="bx bx-x"></i></button></div>
-      <form id="joinLeagueForm" class="mt-7" method="POST" action="{{ route('leagues.join') }}" enctype="multipart/form-data">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Join competition</p>
+          <h2 id="joinLeagueTitle" class="mt-2 text-2xl font-bold">Enter the league code</h2>
+        </div><button type="button" data-close-modal class="text-2xl text-white/45 hover:text-white"
+          aria-label="Close modal"><i class="bx bx-x"></i></button>
+      </div>
+      <form id="joinLeagueForm" class="mt-7" method="POST" action="{{ route('leagues.join') }}"
+        enctype="multipart/form-data">
         @csrf
-        <label for="league-code" class="mb-2 block text-sm font-bold">Five-character code</label><input id="league-code" name="code" value="{{ old('code') }}" maxlength="5" minlength="5" required autocomplete="off" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-center text-2xl font-bold uppercase tracking-[.35em] text-uno-lime outline-none focus:border-uno-lime" placeholder="A7K2P"><p class="mt-3 text-xs leading-5 text-white/40">Ask the league captain for the code shown on their dashboard.</p>
-        <div class="mt-5"><label for="join-team-name" class="mb-2 block text-sm font-bold">Your team name</label><input id="join-team-name" name="team_name" value="{{ old('team_name') }}" maxlength="80" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime" placeholder="e.g. Amr United"><p class="mt-2 text-xs text-white/40">Use a team identity instead of your registered name.</p></div>
-        <div class="mt-4"><label for="join-team-logo" class="mb-2 block text-sm font-bold">Team logo <span class="font-normal text-white/40">(optional)</span></label><input id="join-team-logo" name="team_logo" type="file" accept="image/jpeg,image/png,image/webp" class="block w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-uno-lime file:px-3 file:py-2 file:text-xs file:font-bold file:text-uno-navy"></div>
-        <div class="mt-6 flex flex-col-reverse gap-3 border-t border-white/10 pt-4 sm:flex-row sm:justify-end sm:pt-5"><button type="button" data-close-modal class="w-full rounded-xl border border-white/15 px-5 py-3 text-sm font-bold text-white/70 hover:bg-white/10 sm:w-auto">Cancel</button><button type="submit" class="inline-flex w-full items-center justify-center rounded-xl bg-uno-lime px-5 py-3 text-sm font-extrabold text-uno-navy hover:bg-white sm:w-auto">Join league <i class="bx bx-right-arrow-alt align-middle text-lg"></i></button></div>
+        <label for="league-code" class="mb-2 block text-sm font-bold">Five-character code</label><input id="league-code"
+          name="code" value="{{ old('code') }}" maxlength="5" minlength="5" required autocomplete="off"
+          class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-center text-2xl font-bold uppercase tracking-[.35em] text-uno-lime outline-none focus:border-uno-lime"
+          placeholder="A7K2P">
+        <p class="mt-3 text-xs leading-5 text-white/40">Ask the league captain for the code shown on their dashboard.</p>
+        <div class="mt-5"><label for="join-team-name" class="mb-2 block text-sm font-bold">Your team name</label><input
+            id="join-team-name" name="team_name" value="{{ old('team_name') }}" maxlength="80"
+            class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime"
+            placeholder="e.g. Amr United">
+          <p class="mt-2 text-xs text-white/40">Use a team identity instead of your registered name.</p>
+        </div>
+        <div class="mt-4"><label for="join-team-logo" class="mb-2 block text-sm font-bold">Team logo <span
+              class="font-normal text-white/40">(optional)</span></label><input id="join-team-logo" name="team_logo"
+            type="file" accept="image/jpeg,image/png,image/webp"
+            class="block w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-uno-lime file:px-3 file:py-2 file:text-xs file:font-bold file:text-uno-navy">
+        </div>
+        <div class="mt-6 flex flex-col-reverse gap-3 border-t border-white/10 pt-4 sm:flex-row sm:justify-end sm:pt-5">
+          <button type="button" data-close-modal
+            class="w-full rounded-xl border border-white/15 px-5 py-3 text-sm font-bold text-white/70 hover:bg-white/10 sm:w-auto">Cancel</button><button
+            type="submit"
+            class="inline-flex w-full items-center justify-center rounded-xl bg-uno-lime px-5 py-3 text-sm font-extrabold text-uno-navy hover:bg-white sm:w-auto">Join
+            league <i class="bx bx-right-arrow-alt align-middle text-lg"></i></button></div>
       </form>
     </div>
   </div>
