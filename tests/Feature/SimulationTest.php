@@ -61,4 +61,20 @@ class SimulationTest extends TestCase
         $this->assertDatabaseHas('league_matches', ['simulation_id' => $simulation->id, 'status' => 'pending']);
         $this->assertDatabaseHas('leagues', ['id' => $league->id, 'status' => League::STATUS_YET_TO_START]);
     }
+
+    public function test_a_failed_simulation_can_be_prepared_again_without_duplicate_fixtures(): void
+    {
+        [$league] = $this->leagueWithSquads();
+        $first = app(LeagueSimulationService::class)->prepare($league);
+        $first->update(['status' => LeagueSimulation::FAILED]);
+
+        $second = app(LeagueSimulationService::class)->prepare($league->fresh());
+
+        $this->assertNotSame($first->id, $second->id);
+        $this->assertDatabaseCount('league_matches', 4);
+        $this->assertDatabaseHas('league_matches', [
+            'simulation_id' => $second->id,
+            'fixture_id' => "league:{$league->id}:1:2:leg1",
+        ]);
+    }
 }
