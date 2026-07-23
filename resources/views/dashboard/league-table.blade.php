@@ -330,8 +330,6 @@
     @endif
   </main>
   <style>
-    .motion-ready { visibility: hidden; }
-    @media (prefers-reduced-motion: reduce) { .motion-ready { visibility: visible; } }
     [data-confetti] i {
       position: absolute;
       top: -10%;
@@ -365,8 +363,8 @@
         card.style.display = '';
         if (!animate) return;
         const pieces = card.querySelectorAll('.team-avatar, strong, .fixture-score, .match-details, .goal-timeline, .match-timeline');
-        gsap.fromTo(card, { autoAlpha: 0, x: direction * 36, y: 10 }, { autoAlpha: 1, x: 0, y: 0, duration: .55, ease: 'power3.out' });
-        gsap.fromTo(pieces, { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: .42, stagger: .055, delay: .12, ease: 'back.out(1.4)' });
+        gsap.fromTo(card, { x: direction * 36, y: 10 }, { x: 0, y: 0, duration: .55, ease: 'power3.out', clearProps: 'transform' });
+        gsap.fromTo(pieces, { y: 14 }, { y: 0, duration: .42, stagger: .055, delay: .12, ease: 'back.out(1.4)', clearProps: 'transform' });
       };
       const show = (index, direction = 1) => {
         const nextIndex = (index + cards.length) % cards.length;
@@ -380,12 +378,11 @@
       cards.forEach((card, i) => { card.style.display = i === 0 ? '' : 'none'; card.classList.toggle('hidden', i !== 0); });
       setMeta();
       if (animate) {
-        document.querySelectorAll('.hud-results > *').forEach((element) => element.classList.add('motion-ready'));
-        gsap.to('.motion-ready', { autoAlpha: 1, y: 0, duration: .65, stagger: .08, ease: 'power3.out', clearProps: 'visibility' });
-        gsap.fromTo('.fixture-shell', { autoAlpha: 0, y: 24, scale: .985 }, { autoAlpha: 1, y: 0, scale: 1, duration: .8, delay: .2, ease: 'expo.out' });
-        gsap.fromTo('.team-avatar', { scale: 0, rotation: -18 }, { scale: 1, rotation: 0, duration: .7, delay: .35, stagger: .08, ease: 'back.out(1.8)' });
+        gsap.fromTo('.hud-results > *', { y: 16 }, { y: 0, duration: .65, stagger: .08, ease: 'power3.out', clearProps: 'transform' });
+        gsap.fromTo('.fixture-shell', { y: 24, scale: .985 }, { y: 0, scale: 1, duration: .8, delay: .2, ease: 'expo.out', clearProps: 'transform' });
+        gsap.fromTo('.team-avatar', { scale: .82, rotation: -18 }, { scale: 1, rotation: 0, duration: .7, delay: .35, stagger: .08, ease: 'back.out(1.8)', clearProps: 'transform' });
         gsap.to('.fixture-nav', { y: -3, repeat: -1, yoyo: true, duration: 1.3, stagger: .12, ease: 'sine.inOut' });
-        gsap.fromTo('.hud-league-table tbody tr, [data-winner], .hud-results section:last-of-type tbody tr', { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: .5, stagger: .06, delay: .45, ease: 'power2.out' });
+        gsap.fromTo('.hud-league-table tbody tr, [data-winner], .hud-results section:last-of-type tbody tr', { y: 18 }, { y: 0, duration: .5, stagger: .06, delay: .45, ease: 'power2.out', clearProps: 'transform' });
       }
       revealCard(cards[0], 1);
       previous?.addEventListener('click', () => show(current - 1, -1));
