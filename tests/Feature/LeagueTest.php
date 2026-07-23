@@ -152,5 +152,6 @@ class LeagueTest extends TestCase
         $this->actingAs($owner)->post(route('leagues.start', $league))->assertRedirect(route('leagues.show', $league));
         Queue::assertPushed(RunLeagueSimulation::class);
         $this->assertDatabaseHas('league_simulations', ['league_id' => $league->id, 'status' => 'pending']);
+        $this->actingAs($owner)->getJson(route('leagues.simulation.status', $league))->assertOk()->assertJsonPath('status', 'pending')->assertJsonPath('completed', false);
     }
 }

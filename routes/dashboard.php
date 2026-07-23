@@ -11,6 +11,7 @@ Route::get('', [LeagueController::class, 'index'])->name('dashboard.index');
 Route::post('leagues', [LeagueController::class, 'store'])->name('leagues.store');
 Route::post('leagues/join', [LeagueController::class, 'join'])->name('leagues.join');
 Route::get('leagues/{league}', [LeagueController::class, 'show'])->name('leagues.show');
+Route::get('leagues/{league}/simulation-status', [LeagueController::class, 'simulationStatus'])->name('leagues.simulation.status');
 Route::post('leagues/{league}/ready', [LeagueController::class, 'ready'])->name('leagues.ready');
 Route::post('leagues/{league}/start', [LeagueController::class, 'start'])->name('leagues.start');
 Route::get('leagues/{league}/squad', [SquadController::class, 'show'])->name('squads.show');

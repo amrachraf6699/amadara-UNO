@@ -47,6 +47,19 @@ class LeagueController extends Controller
         return view('dashboard.league-table', compact('league', 'simulation'));
     }
 
+    public function simulationStatus(Request $request, League $league): JsonResponse
+    {
+        $this->authorizeMember($request, $league);
+        $simulation = $league->simulations()->latest()->first();
+
+        return response()->json([
+            'status' => $simulation?->status,
+            'league_status' => $league->status,
+            'completed' => $simulation?->status === LeagueSimulation::COMPLETED,
+            'failed' => $simulation?->status === LeagueSimulation::FAILED,
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
