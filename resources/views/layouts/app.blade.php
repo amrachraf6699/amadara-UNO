@@ -53,6 +53,7 @@
       #slots > div:has(> button:nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       #slots > div:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       #slots > div:has(> button:nth-child(4)) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      #slots > div:has(> button:nth-child(5)) { grid-template-columns: repeat(5, minmax(0, 1fr)); }
       #slots > div:not(:has(> button:nth-child(2))) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       #slots > div:not(:has(> button:nth-child(2))) > :only-child { grid-column: 2; }
       #slots > div > button { width: 100%; min-width: 0; padding: .35rem .25rem; font-size: 9px; }
