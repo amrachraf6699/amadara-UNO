@@ -330,6 +330,8 @@
     @endif
   </main>
   <style>
+    .motion-ready { visibility: hidden; }
+    @media (prefers-reduced-motion: reduce) { .motion-ready { visibility: visible; } }
     [data-confetti] i {
       position: absolute;
       top: -10%;
@@ -346,6 +348,7 @@
       }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script>
     (() => {
       const cards = [...document.querySelectorAll('[data-fixture-card]')];
@@ -355,11 +358,51 @@
       const label = document.getElementById('fixtureLabel');
       const previous = document.getElementById('fixturePrevious');
       const next = document.getElementById('fixtureNext');
-      const show = (index) => { current = (index + cards.length) % cards.length; cards.forEach((card, i) => { card.classList.toggle('hidden', i !== current); card.style.display = i === current ? '' : 'none'; }); if (counter) counter.textContent = `${current + 1} / ${cards.length}`; if (label) label.textContent = `Fixture ${current + 1}`; previous.disabled = cards.length < 2; next.disabled = cards.length < 2; };
-      show(0);
-      previous?.addEventListener('click', () => show(current - 1));
-      next?.addEventListener('click', () => show(current + 1));
-      document.addEventListener('keydown', (event) => { if (event.key === 'ArrowLeft') show(current - 1); if (event.key === 'ArrowRight') show(current + 1); });
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const animate = window.gsap && !reduceMotion;
+      const setMeta = () => { if (counter) counter.textContent = `${current + 1} / ${cards.length}`; if (label) label.textContent = `Fixture ${current + 1}`; if (previous) previous.disabled = cards.length < 2; if (next) next.disabled = cards.length < 2; };
+      const revealCard = (card, direction = 1) => {
+        card.classList.remove('hidden');
+        card.style.display = '';
+        if (!animate) return;
+        const pieces = card.querySelectorAll('.team-avatar, strong, .fixture-score, .match-details, .goal-timeline, .match-timeline');
+        gsap.fromTo(card, { autoAlpha: 0, x: direction * 36, y: 10 }, { autoAlpha: 1, x: 0, y: 0, duration: .55, ease: 'power3.out' });
+        gsap.fromTo(pieces, { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: .42, stagger: .055, delay: .12, ease: 'back.out(1.4)' });
+      };
+      const show = (index, direction = 1) => {
+        const nextIndex = (index + cards.length) % cards.length;
+        if (nextIndex === current && cards[current].style.display !== 'none') return;
+        cards.forEach((card, i) => { if (i !== nextIndex) { card.classList.add('hidden'); card.style.display = 'none'; } });
+        current = nextIndex;
+        revealCard(cards[current], direction);
+        setMeta();
+        if (animate) gsap.fromTo([previous, next, counter, label], { y: -5, autoAlpha: .45 }, { y: 0, autoAlpha: 1, duration: .3, stagger: .035, ease: 'power2.out' });
+      };
+      cards.forEach((card, i) => { card.style.display = i === 0 ? '' : 'none'; card.classList.toggle('hidden', i !== 0); });
+      setMeta();
+      if (animate) {
+        document.querySelectorAll('.hud-results > *').forEach((element) => element.classList.add('motion-ready'));
+        gsap.to('.motion-ready', { autoAlpha: 1, y: 0, duration: .65, stagger: .08, ease: 'power3.out', clearProps: 'visibility' });
+        gsap.fromTo('.fixture-shell', { autoAlpha: 0, y: 24, scale: .985 }, { autoAlpha: 1, y: 0, scale: 1, duration: .8, delay: .2, ease: 'expo.out' });
+        gsap.fromTo('.team-avatar', { scale: 0, rotation: -18 }, { scale: 1, rotation: 0, duration: .7, delay: .35, stagger: .08, ease: 'back.out(1.8)' });
+        gsap.to('.fixture-nav', { y: -3, repeat: -1, yoyo: true, duration: 1.3, stagger: .12, ease: 'sine.inOut' });
+        gsap.fromTo('.hud-league-table tbody tr, [data-winner], .hud-results section:last-of-type tbody tr', { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: .5, stagger: .06, delay: .45, ease: 'power2.out' });
+      }
+      revealCard(cards[0], 1);
+      previous?.addEventListener('click', () => show(current - 1, -1));
+      next?.addEventListener('click', () => show(current + 1, 1));
+      document.addEventListener('keydown', (event) => { if (event.target.matches('input, textarea, select')) return; if (event.key === 'ArrowLeft') show(current - 1, -1); if (event.key === 'ArrowRight') show(current + 1, 1); });
+      document.querySelectorAll('.match-details').forEach((details) => details.addEventListener('toggle', () => {
+        if (!animate) return;
+        const content = details.querySelector(':scope > div');
+        if (details.open && content) gsap.fromTo(content, { autoAlpha: 0, y: -12, height: 0 }, { autoAlpha: 1, y: 0, height: 'auto', duration: .45, ease: 'power3.out', clearProps: 'height' });
+        if (details.open) gsap.fromTo(details.querySelectorAll('.goal-timeline, .match-timeline'), { autoAlpha: 0, x: -12 }, { autoAlpha: 1, x: 0, duration: .35, stagger: .08, delay: .12, ease: 'power2.out' });
+      }));
+      document.querySelectorAll('.fixture-nav, [data-team-open], [data-team-close]').forEach((button) => {
+        if (!animate) return;
+        button.addEventListener('mouseenter', () => gsap.to(button, { scale: 1.08, duration: .2, ease: 'power2.out' }));
+        button.addEventListener('mouseleave', () => gsap.to(button, { scale: 1, duration: .25, ease: 'power2.out' }));
+      });
     })();
   </script>
 @endsection
