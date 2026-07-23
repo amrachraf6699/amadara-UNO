@@ -31,8 +31,14 @@ class SquadController extends Controller
     public function show(Request $request, League $league): View
     {
         $this->authorizeMembership($request, $league);
+        $league->load(['users', 'squads.selections']);
         $squad = $request->user()->squads()->where('league_id', $league->id)->with('selections')->first();
+        if ($squad) $this->useEffectiveSelections($league, $squad, $request->user()->id);
         $membership = $league->users()->whereKey($request->user()->id)->firstOrFail();
+        $opponents = $league->users->reject(fn ($user) => $user->id === $request->user()->id)->map(function ($user) use ($league) {
+            $squad = $league->squads->firstWhere('user_id', $user->id);
+            return ['id' => $user->id, 'name' => $user->name, 'squad' => $squad ? $squad->selections->where('role', 'player')->map(fn ($selection) => ['id' => $selection->player_id, 'name' => $selection->player_data['known_name'] ?? $selection->player_data['name']])->values()->all() : []];
+        })->values();
 
         return view('dashboard.squad-builder', [
             'league' => $league,
@@ -42,6 +48,8 @@ class SquadController extends Controller
             'ready' => (bool) $membership->pivot->ready_at,
             'editable' => true,
             'viewedUser' => $request->user(),
+            'submittedCards' => $league->powerCards()->where('user_id', $request->user()->id)->get()->keyBy('card_type'),
+            'opponents' => $opponents,
         ]);
     }
 
@@ -50,6 +58,7 @@ class SquadController extends Controller
         $this->authorizeMembership($request, $league);
         abort_unless($league->users()->whereKey($user->id)->exists(), 404);
         $squad = $user->squads()->where('league_id', $league->id)->with('selections')->firstOrFail();
+        $this->useEffectiveSelections($league, $squad, $user->id);
 
         return view('dashboard.squad-builder', [
             'league' => $league,
@@ -148,6 +157,14 @@ class SquadController extends Controller
     }
 
     private function authorizeMembership(Request $request, League $league): void { abort_unless($league->users()->whereKey($request->user()->id)->exists(), 403); }
+
+    private function useEffectiveSelections(League $league, Squad $squad, int $userId): void
+    {
+        if ($league->status === League::STATUS_RUNNING) {
+            $effective = $league->effectiveSelections()->where('user_id', $userId)->get();
+            if ($effective->isNotEmpty()) $squad->setRelation('selections', $effective);
+        }
+    }
 
     private function slotKeys(string $formation): array
     {

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\League;
 use App\Models\User;
+use App\Services\PowerCardResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use App\Http\Middleware\VerifyCsrfToken;
@@ -86,5 +87,44 @@ class SquadTest extends TestCase
         $user = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach($user);
         $payload = $this->payload(); $payload['players'][0]['player_id'] = 99999999;
         $this->actingAs($user)->postJson(route('squads.store', $league), $payload)->assertStatus(422);
+    }
+
+    public function test_each_power_card_can_be_submitted_once_after_squad_lock(): void
+    {
+        $owner = User::factory()->create(); $opponent = User::factory()->create(); $league = League::factory()->create(['owner_id' => $owner->id]); $league->users()->attach([$owner->id, $opponent->id]);
+        $this->actingAs($owner)->postJson(route('squads.store', $league), $this->payload())->assertOk();
+        $this->actingAs($opponent)->postJson(route('squads.store', $league), $this->payload(offset: 12))->assertOk();
+
+        $this->actingAs($owner)->postJson(route('cards.store', $league), ['card_type' => 'guard', 'target_player_id' => 1])->assertCreated();
+        $this->actingAs($owner)->postJson(route('cards.store', $league), ['card_type' => 'guard', 'target_player_id' => 2])->assertStatus(422);
+        $this->actingAs($owner)->postJson(route('cards.store', $league), ['card_type' => 'boost', 'target_user_id' => $opponent->id])->assertCreated();
+        $this->assertDatabaseCount('league_power_cards', 2);
+    }
+
+    public function test_power_cards_are_rejected_before_lock_and_after_ready(): void
+    {
+        $owner = User::factory()->create(); $league = League::factory()->create(['owner_id' => $owner->id]); $league->users()->attach($owner);
+        $this->actingAs($owner)->postJson(route('cards.store', $league), ['card_type' => 'guard', 'target_player_id' => 1])->assertStatus(422);
+        $this->actingAs($owner)->postJson(route('squads.store', $league), $this->payload())->assertOk();
+        $this->actingAs($owner)->post(route('leagues.ready', $league))->assertRedirect();
+        $this->actingAs($owner)->postJson(route('cards.store', $league), ['card_type' => 'guard', 'target_player_id' => 1])->assertStatus(422);
+    }
+
+    public function test_guard_blocks_steal_and_successful_steal_swaps_effective_squads(): void
+    {
+        $owner = User::factory()->create(); $opponent = User::factory()->create(); $league = League::factory()->create(['owner_id' => $owner->id]); $league->users()->attach([$owner->id, $opponent->id]);
+        $this->actingAs($owner)->postJson(route('squads.store', $league), $this->payload())->assertOk();
+        $this->actingAs($opponent)->postJson(route('squads.store', $league), $this->payload(offset: 12))->assertOk();
+        $this->actingAs($owner)->postJson(route('cards.store', $league), ['card_type' => 'guard', 'target_player_id' => 1])->assertCreated();
+        $this->actingAs($opponent)->postJson(route('cards.store', $league), ['card_type' => 'steal', 'target_user_id' => $owner->id, 'target_player_id' => 1, 'replacement_player_id' => 13])->assertCreated();
+        app(PowerCardResolver::class)->resolve($league->fresh());
+        $this->assertDatabaseHas('league_power_cards', ['card_type' => 'steal', 'resolution_status' => 'rejected']);
+        $this->assertDatabaseHas('league_effective_selections', ['user_id' => $owner->id, 'player_id' => 1]);
+
+        $league->powerCards()->delete();
+        $this->actingAs($owner)->postJson(route('cards.store', $league), ['card_type' => 'steal', 'target_user_id' => $opponent->id, 'target_player_id' => 13, 'replacement_player_id' => 1])->assertCreated();
+        app(PowerCardResolver::class)->resolve($league->fresh());
+        $this->assertDatabaseHas('league_effective_selections', ['user_id' => $owner->id, 'player_id' => 13]);
+        $this->assertDatabaseHas('league_effective_selections', ['user_id' => $opponent->id, 'player_id' => 1]);
     }
 }

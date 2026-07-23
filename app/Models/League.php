@@ -78,6 +78,12 @@ class League extends Model
         return $this->hasMany(SquadSelection::class);
     }
 
+    public function powerCards(): HasMany { return $this->hasMany(LeaguePowerCard::class); }
+    public function effectiveSelections(): HasMany { return $this->hasMany(LeagueEffectiveSelection::class); }
+    public function simulations(): HasMany { return $this->hasMany(LeagueSimulation::class); }
+    public function matches(): HasMany { return $this->hasMany(LeagueMatch::class); }
+    public function standings(): HasMany { return $this->hasMany(LeagueStanding::class); }
+
     public static function generateUniqueCode(): string
     {
         do {

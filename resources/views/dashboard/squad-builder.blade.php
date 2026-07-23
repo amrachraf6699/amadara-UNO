@@ -8,6 +8,8 @@
   $locked = $squad !== null;
   $editable = $editable ?? true;
   $viewedUser = $viewedUser ?? auth()->user();
+  $submittedCards = $submittedCards ?? collect();
+  $opponents = $opponents ?? collect();
   $saved = $squad?->selections->mapWithKeys(fn ($selection) => [$selection->slot_key => [
       'id' => $selection->player->id,
        'name' => $selection->player->name,
@@ -34,6 +36,51 @@
     <a href="{{ route('squads.show', $league) }}" class="rounded-t-xl border-b-2 border-uno-lime px-4 py-3 text-sm font-extrabold text-uno-lime">My formation</a>
     <a href="{{ route('leagues.show', $league) }}" class="rounded-t-xl border-b-2 border-transparent px-4 py-3 text-sm font-bold text-white/50 hover:border-white/30 hover:text-white">Table</a>
   </nav>
+
+  @if ($editable && $locked && $league->status === \App\Models\League::STATUS_YET_TO_START)
+    <section class="mt-6 glass-panel rounded-3xl p-5 sm:p-6">
+      <div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Power cards</p><h2 class="mt-2 text-xl font-bold">Choose your advantage.</h2></div><p class="text-xs text-white/40">Each card can be submitted once before Ready.</p></div>
+      <div class="mt-5 grid gap-3 lg:grid-cols-3">
+        @foreach ([\App\Models\LeaguePowerCard::GUARD => 'Guard', \App\Models\LeaguePowerCard::STEAL => 'Steal', \App\Models\LeaguePowerCard::BOOST => 'Boost'] as $type => $label)
+          @php $card = $submittedCards->get($type); @endphp
+          <form method="POST" action="{{ route('cards.store', $league) }}" data-power-card class="rounded-2xl border border-white/10 bg-white/5 p-4">
+            @csrf<input type="hidden" name="card_type" value="{{ $type }}"><strong class="text-uno-lime">{{ $label }}</strong>
+            @if ($type === \App\Models\LeaguePowerCard::GUARD)
+              <select name="target_player_id" required class="mt-3 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-xs text-white"><option value="">Protect one player</option>@foreach ($squad->selections->where('role', 'player') as $selection)<option value="{{ $selection->player_id }}">{{ $selection->player_data['known_name'] ?? $selection->player_data['name'] }}</option>@endforeach</select>
+            @elseif ($type === \App\Models\LeaguePowerCard::BOOST)
+              <select name="target_user_id" required class="mt-3 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-xs text-white"><option value="">Choose an opponent</option>@foreach ($opponents->filter(fn ($opponent) => ! empty($opponent['squad'])) as $opponent)<option value="{{ $opponent['id'] }}">{{ $opponent['name'] }}</option>@endforeach</select>
+            @else
+              <select name="target_user_id" required class="mt-3 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-xs text-white"><option value="">Choose an opponent</option>@foreach ($opponents->filter(fn ($opponent) => ! empty($opponent['squad'])) as $opponent)<option value="{{ $opponent['id'] }}">{{ $opponent['name'] }}</option>@endforeach</select>
+              <select name="target_player_id" required class="mt-2 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-xs text-white"><option value="">Choose their player</option>@foreach ($opponents as $opponent) @foreach ($opponent['squad'] as $player)<option value="{{ $player['id'] }}">{{ $opponent['name'] }} — {{ $player['name'] }}</option>@endforeach @endforeach</select>
+              <select name="replacement_player_id" required class="mt-2 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-xs text-white"><option value="">Give them your player</option>@foreach ($squad->selections->where('role', 'player') as $selection)<option value="{{ $selection->player_id }}">{{ $selection->player_data['known_name'] ?? $selection->player_data['name'] }}</option>@endforeach</select>
+            @endif
+            @if ($card)<p class="mt-3 text-xs font-bold text-uno-lime"><i class="bx bx-check-circle mr-1"></i> Submitted</p>@else<button type="submit" class="mt-3 w-full rounded-xl bg-uno-lime px-3 py-3 text-xs font-extrabold text-uno-navy hover:bg-white">Submit {{ $label }}</button>@endif
+          </form>
+        @endforeach
+      </div>
+    </section>
+  @endif
+
+  @if ($editable && $locked && $league->status === \App\Models\League::STATUS_YET_TO_START)
+    <script>
+      document.querySelectorAll('[data-power-card]').forEach((form) => form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const button = form.querySelector('button[type="submit"]');
+        if (!button) return;
+        button.disabled = true;
+        try {
+          const response = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.message || Object.values(data.errors || {}).flat()[0] || 'Unable to submit card.');
+          window.showToast?.(data.message || 'Card submitted.');
+          window.location.reload();
+        } catch (error) {
+          window.showToast?.(error.message, 'error');
+          button.disabled = false;
+        }
+      }));
+    </script>
+  @endif
 
   @if (!$locked && $editable)
   <section class="mt-8 glass-panel rounded-3xl p-5 sm:p-7">

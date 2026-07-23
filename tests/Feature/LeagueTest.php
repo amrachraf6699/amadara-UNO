@@ -6,6 +6,8 @@ use App\Http\Middleware\VerifyCsrfToken;
 use App\Models\League;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
+use App\Jobs\RunLeagueSimulation;
 use Tests\TestCase;
 
 class LeagueTest extends TestCase
@@ -17,6 +19,12 @@ class LeagueTest extends TestCase
         parent::setUp();
 
         $this->withoutMiddleware(VerifyCsrfToken::class);
+    }
+
+    private function squadPayload(int $offset = 0): array
+    {
+        $slots = ['goalkeeper', 'defender_1', 'defender_2', 'defender_3', 'defender_4', 'midfielder_1', 'midfielder_2', 'midfielder_3', 'forward_1', 'forward_2', 'forward_3'];
+        return ['formation' => '4-3-3', 'players' => collect($slots)->map(fn ($slot, $index) => ['slot' => $slot, 'player_id' => $offset + $index + 1])->all(), 'coach_player_id' => $offset + 12];
     }
 
     public function test_guests_cannot_access_the_dashboard_or_league_actions(): void
@@ -125,6 +133,8 @@ class LeagueTest extends TestCase
         $owner = User::factory()->create(); $player = User::factory()->create();
         $league = League::factory()->create(['owner_id' => $owner->id]);
         $league->users()->attach([$owner->id, $player->id]);
+        $this->actingAs($owner)->postJson(route('squads.store', $league), $this->squadPayload())->assertOk();
+        $this->actingAs($player)->postJson(route('squads.store', $league), $this->squadPayload(12))->assertOk();
 
         $this->actingAs($owner)->post(route('leagues.start', $league))->assertSessionHasErrors('league');
         $league->users()->updateExistingPivot($owner->id, ['ready_at' => now()]);
@@ -132,7 +142,9 @@ class LeagueTest extends TestCase
         $league->users()->updateExistingPivot($player->id, ['ready_at' => now()]);
         $this->actingAs($player)->post(route('leagues.start', $league))->assertSessionHasErrors('league');
 
-        $this->actingAs($owner)->post(route('leagues.start', $league))->assertRedirect(route('dashboard.index'));
-        $this->assertDatabaseHas('leagues', ['id' => $league->id, 'status' => League::STATUS_RUNNING]);
+        Queue::fake();
+        $this->actingAs($owner)->post(route('leagues.start', $league))->assertRedirect(route('leagues.show', $league));
+        Queue::assertPushed(RunLeagueSimulation::class);
+        $this->assertDatabaseHas('league_simulations', ['league_id' => $league->id, 'status' => 'pending']);
     }
 }

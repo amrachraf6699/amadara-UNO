@@ -4,8 +4,60 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ca12c68b94ca819dfc7873280b47906e",
+    "content-hash": "0299e0b7494eb6fbc96bb7b674fea8cc",
     "packages": [
+        {
+            "name": "amrachraf6699/laravel-gemini-ai",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/amrachraf6699/laravel-gemini-ai.git",
+                "reference": "9522363c026535c825b68ae4863ce5c9aa63e2ce"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/amrachraf6699/laravel-gemini-ai/zipball/9522363c026535c825b68ae4863ce5c9aa63e2ce",
+                "reference": "9522363c026535c825b68ae4863ce5c9aa63e2ce",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.0",
+                "illuminate/support": "^8.0|^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "GeminiAi": "Amrachraf6699\\LaravelGeminiAi\\Facades\\GeminiAi"
+                    },
+                    "providers": [
+                        "Amrachraf6699\\LaravelGeminiAi\\Providers\\GeminiAiServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Amrachraf6699\\LaravelGeminiAi\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Amr Achraf",
+                    "email": "amrachraf6690@icloud.com"
+                }
+            ],
+            "description": "A Laravel package for integrating with Google's Gemini AI API",
+            "support": {
+                "issues": "https://github.com/amrachraf6699/laravel-gemini-ai/issues",
+                "source": "https://github.com/amrachraf6699/laravel-gemini-ai/tree/v1.0.1"
+            },
+            "time": "2026-01-25T07:49:53+00:00"
+        },
         {
             "name": "brick/math",
             "version": "0.12.3",

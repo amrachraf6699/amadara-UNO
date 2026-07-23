@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\RunLeagueSimulation;
 use App\Models\League;
+use App\Models\LeagueSimulation;
+use App\Services\LeagueSimulationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,8 +30,9 @@ class LeagueController extends Controller
     {
         $this->authorizeMember($request, $league);
         $league->load(['users', 'readyUsers', 'squads']);
+        $simulation = $league->simulations()->where('status', LeagueSimulation::COMPLETED)->with(['standings.user', 'matches.homeUser', 'matches.awayUser'])->latest()->first();
 
-        return view('dashboard.league-table', compact('league'));
+        return view('dashboard.league-table', compact('league', 'simulation'));
     }
 
     public function store(Request $request): RedirectResponse|JsonResponse
@@ -97,7 +101,7 @@ class LeagueController extends Controller
         return redirect()->route('squads.show', $league)->with('status', 'You are ready for the league.');
     }
 
-    public function start(Request $request, League $league): RedirectResponse
+    public function start(Request $request, League $league, LeagueSimulationService $simulationService): RedirectResponse
     {
         $this->authorizeMember($request, $league);
         if ((int) $league->owner_id !== (int) $request->user()->id) throw ValidationException::withMessages(['league' => 'Only the league owner can start it.']);
@@ -107,8 +111,13 @@ class LeagueController extends Controller
         $ready = $league->readyUsers()->count();
         if ($members === 0 || $members !== $ready) throw ValidationException::withMessages(['league' => 'Every league player must be ready before the league can start.']);
 
-        $league->update(['status' => League::STATUS_RUNNING]);
-        return redirect()->route('dashboard.index')->with('status', "{$league->name} has started.");
+        if ($league->simulations()->whereIn('status', [LeagueSimulation::PENDING, LeagueSimulation::RUNNING])->exists()) {
+            throw ValidationException::withMessages(['league' => 'This league simulation is already being prepared.']);
+        }
+
+        $simulation = $simulationService->prepare($league);
+        RunLeagueSimulation::dispatch($simulation->id);
+        return redirect()->route('leagues.show', $league)->with('status', "{$league->name} is being simulated.");
     }
 
     /**
