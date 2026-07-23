@@ -27,6 +27,7 @@
       <button id="newLeagueButton" type="button" class="hud-action px-5 py-3 text-sm">
         <i class="bx bx-plus mr-1 align-middle text-lg"></i> New league
       </button>
+      <button type="button" data-show-join class="hud-secondary-action px-5 py-3 text-sm"><i class="bx bx-log-in-circle mr-1 align-middle text-lg"></i> Join league</button>
       @endif
     </div>
 
@@ -45,12 +46,19 @@
         <button type="button" data-open-new-league class="mt-7 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy">New League</button>
       </section>
     @else
-      <section id="leaguesGrid" class="hud-league-table mt-10" aria-label="Your participating leagues">
-        <div><div class="mb-4 flex items-end justify-between"><div><p class="hud-kicker">Competition lobby</p><h2 class="mt-2 text-2xl font-black">Your fixtures.</h2></div><span class="text-xs font-bold uppercase tracking-widest text-white/35">{{ $leagues->count() }} slots</span></div><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-white/5 text-xs uppercase tracking-widest text-white/40"><tr><th class="px-5 py-4">League</th><th class="px-5 py-4">Status</th><th class="px-5 py-4">Ready</th><th class="px-5 py-4">Players</th><th class="px-5 py-4 text-right">Action</th></tr></thead><tbody class="divide-y divide-white/10">
-        @foreach ($leagues as $league)
-          <tr class="hover:bg-white/[.03]"><td class="px-5 py-4"><div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-xl bg-uno-blue/20 text-xl text-uno-lime"><i class="{{ $league->icon }}"></i></span><div><strong class="block">{{ $league->name }}</strong><small class="text-white/40">Code: <span class="tracking-[.2em] text-uno-lime">{{ $league->code }}</span></small></div></div></td><td class="px-5 py-4"><span class="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white/65">{{ $statusLabels[$league->status] ?? str_replace('_', ' ', ucfirst($league->status)) }}</span></td><td class="px-5 py-4 font-bold text-uno-lime">{{ $league->ready_users_count }} / {{ $league->users_count }}</td><td class="px-5 py-4 text-white/60">{{ $league->users_count }} / {{ $league->max_users }}</td><td class="px-5 py-4 text-right"><a href="{{ route('leagues.show', $league) }}" class="font-extrabold text-uno-lime hover:text-white">Open league <i class="bx bx-right-arrow-alt"></i></a></td></tr>
-        @endforeach
-        </tbody></table></div></div>
+      <section id="leaguesGrid" class="mt-10" aria-label="Your participating leagues">
+        <div class="mb-5 flex items-end justify-between gap-4"><div><p class="hud-kicker">Competition lobby</p><h2 class="hud-title mt-2 text-2xl font-black">Your fixtures.</h2></div><span class="hud-status" data-status="running">{{ $leagues->count() }} slots</span></div>
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          @foreach ($leagues as $league)
+            @php $readyPercent = $league->users_count ? round(($league->ready_users_count / $league->users_count) * 100) : 0; @endphp
+            <article class="hud-league-card group relative overflow-hidden p-5 sm:p-6">
+              <div class="flex items-start justify-between gap-4"><span class="hud-icon-frame h-14 w-14 text-3xl"><i class="{{ $league->icon }}"></i></span><span class="hud-status" data-status="{{ $league->status }}">{{ $statusLabels[$league->status] ?? str_replace('_', ' ', ucfirst($league->status)) }}</span></div>
+              <div class="mt-6"><h3 class="truncate text-2xl font-black text-white">{{ $league->name }}</h3><div class="mt-2 flex items-center gap-2 text-xs text-white/40"><i class="bx bx-key text-uno-lime"></i><span class="tracking-[.25em] text-uno-lime">{{ $league->code }}</span><span>•</span><span>{{ $league->users_count }} / {{ $league->max_users }} players</span></div></div>
+              <div class="mt-6"><div class="flex items-center justify-between text-xs font-bold"><span class="text-white/45">Ready squads</span><span class="text-uno-lime">{{ $league->ready_users_count }} / {{ $league->users_count }}</span></div><div class="hud-meter mt-2"><span style="width: {{ $readyPercent }}%"></span></div></div>
+              <a href="{{ route('leagues.show', $league) }}" class="hud-card-action mt-6 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[.04] px-4 py-3 text-sm font-extrabold text-white transition group-hover:border-uno-lime/35 group-hover:bg-uno-lime group-hover:text-uno-navy"><span>{{ $league->status === 'yet_to_start' ? 'Open lobby' : 'Open results' }}</span><i class="bx bx-right-arrow-alt text-xl"></i></a>
+            </article>
+          @endforeach
+        </div>
       </section>
     @endif
   </main>

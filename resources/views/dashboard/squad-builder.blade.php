@@ -39,6 +39,8 @@
     <a href="{{ route('leagues.show', $league) }}" class="rounded-t-xl border-b-2 border-transparent px-4 py-3 text-sm font-bold text-white/50 hover:border-white/30 hover:text-white">Table</a>
   </nav>
 
+  <section class="hud-progress-strip mt-5" aria-label="Squad progression"><div class="hud-progress-step {{ ! $locked ? 'is-current' : 'is-complete' }}"><span>01</span><strong>Build squad</strong><small>{{ $locked ? 'Complete' : 'In progress' }}</small></div><div class="hud-progress-line"></div><div class="hud-progress-step {{ $locked ? 'is-complete' : '' }}"><span>02</span><strong>Lock formation</strong><small>{{ $locked ? 'Locked' : 'Pending' }}</small></div><div class="hud-progress-line"></div><div class="hud-progress-step {{ $ready ? 'is-complete' : ($locked ? 'is-current' : '') }}"><span>03</span><strong>Ready up</strong><small>{{ $ready ? 'Ready' : ($locked ? 'Waiting' : 'Locked') }}</small></div></section>
+
   @if ($editable && $locked && $league->status === \App\Models\League::STATUS_YET_TO_START)
     <section class="mt-6 glass-panel rounded-3xl p-5 sm:p-6">
       <div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Power cards</p><h2 class="mt-2 text-xl font-bold">Choose your advantage.</h2></div><p class="text-xs text-white/40">Each card can be submitted once before Ready.</p></div>

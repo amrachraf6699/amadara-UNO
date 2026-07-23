@@ -76,6 +76,30 @@
     .hud-meter > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #49cf19, #d8ff5f); box-shadow: 0 0 16px rgba(125,237,25,.55); }
     .hud-action { border-radius: 14px; background: #7dec19; color: #071d33; font-weight: 900; transition: transform .2s ease, box-shadow .2s ease, background .2s ease; }
     .hud-action:hover { transform: translateY(-2px); background: #fff; box-shadow: 0 10px 28px rgba(125,237,25,.18); }
+    .hud-secondary-action { border: 1px solid rgba(85,184,255,.35); border-radius: 14px; background: rgba(8,120,209,.12); color: #9bd7ff; font-weight: 900; transition: transform .2s ease, background .2s ease, border-color .2s ease; }
+    .hud-secondary-action:hover { transform: translateY(-2px); border-color: rgba(125,237,25,.55); background: rgba(125,237,25,.12); color: #d8ff5f; }
+    .hud-league-card { background: linear-gradient(145deg, rgba(8,39,70,.9), rgba(3,20,37,.86)); border: 1px solid rgba(255,255,255,.1); border-radius: 26px; box-shadow: 0 18px 50px rgba(0,0,0,.2), inset 0 1px rgba(255,255,255,.06); transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+    .hud-league-card::after { content: ''; position: absolute; right: -36px; bottom: -54px; width: 150px; height: 150px; border-radius: 999px; background: rgba(17,151,239,.10); filter: blur(4px); pointer-events: none; }
+    .hud-league-card:hover { transform: translateY(-6px); border-color: rgba(125,237,25,.42); box-shadow: 0 25px 70px rgba(0,0,0,.3), 0 0 35px rgba(125,237,25,.08); }
+    .hud-card-action { position: relative; z-index: 1; }
+    .hud-results details { position: relative; overflow: hidden; border-color: rgba(255,255,255,.1); background: linear-gradient(110deg, rgba(8,39,70,.82), rgba(3,20,37,.78)); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+    .hud-results details:hover { transform: translateY(-2px); border-color: rgba(85,184,255,.35); box-shadow: 0 18px 45px rgba(0,0,0,.22); }
+    .hud-results details summary { font-weight: 800; }
+    .hud-results details summary::-webkit-details-marker { display: none; }
+    .hud-results details[open] { border-color: rgba(125,237,25,.35); box-shadow: 0 0 28px rgba(125,237,25,.08); }
+    .hud-results [data-winner] { animation: hud-winner-in .7s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes hud-winner-in { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .hud-progress-strip { display: flex; align-items: center; gap: .7rem; border: 1px solid rgba(255,255,255,.09); border-radius: 20px; background: rgba(255,255,255,.035); padding: .75rem; }
+    .hud-progress-step { display: grid; grid-template-columns: auto 1fr; column-gap: .55rem; align-items: center; min-width: 0; flex: 1; color: rgba(255,255,255,.35); }
+    .hud-progress-step > span { grid-row: span 2; display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid rgba(255,255,255,.13); border-radius: 10px; font-size: .65rem; font-weight: 900; }
+    .hud-progress-step strong { overflow: hidden; color: inherit; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; text-overflow: ellipsis; white-space: nowrap; }
+    .hud-progress-step small { color: rgba(255,255,255,.32); font-size: .65rem; }
+    .hud-progress-step.is-current { color: #9bd7ff; }
+    .hud-progress-step.is-current > span { border-color: #55b8ff; background: rgba(8,120,209,.2); color: #9bd7ff; box-shadow: 0 0 16px rgba(85,184,255,.2); }
+    .hud-progress-step.is-complete { color: #d8ff5f; }
+    .hud-progress-step.is-complete > span { border-color: #7dec19; background: #7dec19; color: #071d33; }
+    .hud-progress-line { height: 1px; flex: .35; background: linear-gradient(90deg, rgba(125,237,25,.5), rgba(255,255,255,.1)); }
+    @media (max-width: 520px) { .hud-progress-strip { gap: .35rem; padding: .55rem; } .hud-progress-step { display: flex; flex-direction: column; text-align: center; gap: .25rem; } .hud-progress-step > span { width: 1.8rem; height: 1.8rem; } .hud-progress-step strong { max-width: 5rem; font-size: .58rem; } .hud-progress-step small { font-size: .56rem; } .hud-progress-line { flex: 1; } }
     .hud-icon-frame { display: grid; place-items: center; border: 1px solid rgba(125,237,25,.3); border-radius: 18px; background: linear-gradient(145deg, rgba(8,120,209,.3), rgba(125,237,25,.12)); color: #7dec19; box-shadow: inset 0 1px rgba(255,255,255,.12), 0 0 22px rgba(8,120,209,.12); }
     .hud-league-table tbody { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: .75rem; }
     .hud-league-table tbody tr { display: grid; grid-template-columns: minmax(0, 2.2fr) repeat(3, minmax(90px, .8fr)) minmax(110px, .7fr); align-items: center; border: 1px solid rgba(255,255,255,.09); border-radius: 20px; background: linear-gradient(110deg, rgba(8,39,70,.82), rgba(5,28,49,.68)); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
