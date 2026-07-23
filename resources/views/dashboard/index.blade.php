@@ -37,46 +37,36 @@
           League</button>
       </section>
     @else
-      <section id="leaguesGrid" class="mt-10" aria-label="Your participating leagues">
-        <div class="leagues-list grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          @foreach ($leagues as $league)
-            @php $readyPercent = $league->users_count ? round(($league->ready_users_count / $league->users_count) * 100) : 0; @endphp
-            <a href="{{ route('leagues.show', $league) }}" class="hud-league-card league-row group relative overflow-hidden p-5 sm:p-6">
-              <span class="league-row-icon hud-icon-frame h-14 w-14 text-3xl"><i
-                    class="{{ $league->icon }}"></i></span><span class="hud-status"
-                  data-status="{{ $league->status }}">{{ $statusLabels[$league->status] ?? str_replace('_', ' ', ucfirst($league->status)) }}</span>
-              <div class="league-row-main min-w-0">
-                <h3 class="truncate text-2xl font-black text-white">{{ $league->name }}</h3>
-                <div class="mt-2 flex items-center gap-2 text-xs text-white/40"><i class="bx bx-key text-uno-lime"></i><span
-                    class="tracking-[.25em] text-uno-lime">{{ $league->code }}</span><span>•</span><span>{{ $league->users_count }}
-                    / {{ $league->max_users }} players</span></div>
-              </div>
-              <div class="league-row-progress mt-6">
-                <div class="flex items-center justify-between text-xs font-bold"><span class="text-white/45">Ready
-                    squads</span><span class="text-uno-lime">{{ $league->ready_users_count }} /
-                    {{ $league->users_count }}</span></div>
-                <div class="hud-meter mt-2"><span style="width: {{ $readyPercent }}%"></span></div>
-              </div>
-              <span class="hud-card-action league-row-action mt-6 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[.04] px-4 py-3 text-sm font-extrabold text-white transition group-hover:border-uno-lime/35 group-hover:bg-uno-lime group-hover:text-uno-navy"><span>{{ $league->status === 'yet_to_start' ? 'Open lobby' : 'Open results' }}</span><i
-                  class="bx bx-right-arrow-alt text-xl"></i></span>
-            </a>
-          @endforeach
-        </div>
-      </section>
       <section class="leagues-mobile-table mt-10" aria-label="Your leagues table">
         <div class="dashboard-table-wrap">
           <table class="dashboard-leagues-table w-full text-left text-sm">
-            <thead><tr><th>League</th><th>Status</th><th>Players</th><th>Ready</th><th aria-label="Open"></th></tr></thead>
+            <thead>
+              <tr>
+                <th>League</th>
+                <th>Status</th>
+                <th>Players</th>
+                <th>Ready</th>
+                <th aria-label="Open"></th>
+              </tr>
+            </thead>
             <tbody>@foreach ($leagues as $league)
               @php $readyPercent = $league->users_count ? round(($league->ready_users_count / $league->users_count) * 100) : 0; @endphp
               <tr data-league-row data-league-url="{{ route('leagues.show', $league) }}" tabindex="0" role="link">
-                <td><span class="dashboard-league-name"><span class="hud-icon-frame dashboard-league-icon"><i class="{{ $league->icon }}"></i></span><span class="min-w-0"><strong class="block truncate">{{ $league->name }}</strong><small class="mt-1 block tracking-[.2em] text-uno-lime">{{ $league->code }}</small></span></span></td>
-                <td><span class="hud-status" data-status="{{ $league->status }}">{{ $statusLabels[$league->status] ?? str_replace('_', ' ', ucfirst($league->status)) }}</span></td>
+                <td><span class="dashboard-league-name"><span class="hud-icon-frame dashboard-league-icon"><i
+                        class="{{ $league->icon }}"></i></span><span class="min-w-0"><strong
+                        class="block truncate">{{ $league->name }}</strong><small
+                        class="mt-1 block tracking-[.2em] text-uno-lime">{{ $league->code }}</small></span></span></td>
+                <td><span class="hud-status"
+                    data-status="{{ $league->status }}">{{ $statusLabels[$league->status] ?? str_replace('_', ' ', ucfirst($league->status)) }}</span>
+                </td>
                 <td>{{ $league->users_count }} / {{ $league->max_users }}</td>
-                <td><span class="text-uno-lime">{{ $league->ready_users_count }} / {{ $league->users_count }}</span><div class="hud-meter dashboard-ready-meter"><span style="width: {{ $readyPercent }}%"></span></div></td>
+                <td><span class="text-uno-lime">{{ $league->ready_users_count }} / {{ $league->users_count }}</span>
+                  <div class="hud-meter dashboard-ready-meter"><span style="width: {{ $readyPercent }}%"></span></div>
+                </td>
                 <td class="text-right"><i class="bx bx-right-arrow-alt dashboard-row-arrow" aria-hidden="true"></i></td>
               </tr>
-            @endforeach</tbody>
+            @endforeach
+            </tbody>
           </table>
         </div>
       </section>
@@ -191,7 +181,8 @@
             class="w-full rounded-xl border border-white/15 px-5 py-3 text-sm font-bold text-white/70 hover:bg-white/10 sm:w-auto">Cancel</button><button
             type="submit"
             class="inline-flex w-full items-center justify-center rounded-xl bg-uno-lime px-5 py-3 text-sm font-extrabold text-uno-navy hover:bg-white sm:w-auto">Join
-            league <i class="bx bx-right-arrow-alt align-middle text-lg"></i></button></div>
+            league <i class="bx bx-right-arrow-alt align-middle text-lg"></i></button>
+        </div>
       </form>
     </div>
   </div>
