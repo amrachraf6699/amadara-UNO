@@ -2,7 +2,7 @@
   <nav class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8" aria-label="Main navigation">
     <a href="{{ url('/') }}#home" class="flex items-center gap-3" aria-label="Amadara UNO home">
       <span class="hud-icon-frame h-11 w-11"><img src="{{ asset('logo.png') }}" alt="Amadara UNO Football League" class="h-9 w-10 object-contain"></span>
-      <span class="hidden text-xs font-black tracking-[.2em] text-white sm:block">AMADARA <span class="text-uno-lime">UNO</span><small class="mt-1 block text-[9px] font-bold tracking-[.28em] text-white/35">FOOTBALL OS</small></span>
+      <span class="hidden text-xs font-black tracking-[.2em] text-white sm:block">AMADARA <span class="text-uno-lime">UNO</span></span>
     </a>
 
     @auth

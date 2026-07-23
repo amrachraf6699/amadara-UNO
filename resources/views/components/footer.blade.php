@@ -9,9 +9,9 @@
     </div>
     <small class="text-white/40">© {{ date('Y') }} Amadara UNO</small>
     <div class="flex gap-3 text-2xl text-white/45">
-      <a href="#" aria-label="Facebook" class="transition hover:text-uno-lime"><i class="bx bxl-facebook"></i></a>
-      <a href="#" aria-label="Instagram" class="transition hover:text-uno-lime"><i class="bx bxl-instagram"></i></a>
-      <a href="#" aria-label="YouTube" class="transition hover:text-uno-lime"><i class="bx bxl-youtube"></i></a>
+      <a target="_blank" href="https://facebook.com/amrachraf6690" aria-label="Facebook" class="transition hover:text-uno-lime"><i class="bx bxl-facebook"></i></a>
+      <a target="_blank" href="https://instagram.com/amrachraf6690" aria-label="Instagram" class="transition hover:text-uno-lime"><i class="bx bxl-instagram"></i></a>
+      <a target="_blank" href="https://youtube.com/@amrachraf6699" aria-label="YouTube" class="transition hover:text-uno-lime"><i class="bx bxl-youtube"></i></a>
     </div>
   </div>
 </footer>

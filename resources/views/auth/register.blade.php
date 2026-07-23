@@ -43,7 +43,15 @@
             <div class="mb-8 flex items-center justify-center lg:hidden"><img src="{{ asset('logo.png') }}" alt="Amadara UNO" class="h-16 w-auto object-contain"></div>
             <div class="text-center"><p class="text-sm font-extrabold uppercase tracking-[.22em] text-uno-blue">Create your account</p><h2 class="mt-3 text-3xl font-black text-uno-navy">Ready for matchday?</h2><p class="mt-3 text-sm leading-6 text-slate-500">Set up your profile and step into the Amadara UNO league.</p></div>
 
-            <form class="mt-8 space-y-5" method="POST" action="{{ route('register') }}">
+            <div class="mt-8">
+              <a class="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-extrabold text-slate-700 transition hover:-translate-y-0.5 hover:border-uno-blue/40 hover:bg-uno-ice" href="{{ route('oauth.redirect') }}">
+                <i class="bx bxl-google text-2xl text-red-500"></i>
+                Continue with Google
+              </a>
+              <div class="my-6 flex items-center gap-4"><div class="h-px flex-1 bg-slate-200"></div><span class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">or create with email</span><div class="h-px flex-1 bg-slate-200"></div></div>
+            </div>
+
+            <form class="space-y-5" method="POST" action="{{ route('register') }}">
               @csrf
               <div><label for="name" class="mb-2 block text-sm font-bold text-slate-700">Full name</label><div class="input-ring flex items-center rounded-2xl border border-slate-200 bg-white transition"><i class="bx bx-user ml-4 text-xl text-slate-400"></i><input id="name" name="name" type="text" autocomplete="name" value="{{ old('name') }}" placeholder="Your name" required autofocus class="w-full rounded-2xl bg-transparent px-3 py-4 text-sm font-medium text-slate-800 outline-none placeholder:text-slate-400"></div>@error('name')<p class="mt-1.5 text-xs font-semibold text-red-500">{{ $message }}</p>@enderror</div>
               <div><label for="email" class="mb-2 block text-sm font-bold text-slate-700">Email address</label><div class="input-ring flex items-center rounded-2xl border border-slate-200 bg-white transition"><i class="bx bx-envelope ml-4 text-xl text-slate-400"></i><input id="email" name="email" type="email" autocomplete="email" value="{{ old('email') }}" placeholder="you@example.com" required class="w-full rounded-2xl bg-transparent px-3 py-4 text-sm font-medium text-slate-800 outline-none placeholder:text-slate-400"></div>@error('email')<p class="mt-1.5 text-xs font-semibold text-red-500">{{ $message }}</p>@enderror</div>
