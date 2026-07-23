@@ -27,7 +27,7 @@
   if (!$locked) foreach ($formations[array_key_first($formations)] as $role => $count) for ($i = 1; $i <= $count; $i++) $slotKeys[] = "{$role}_{$i}";
 @endphp
 
-<main data-dashboard-page="{{ $editable ? 'squad-builder' : 'member-squad' }}" class="hud-squad mx-auto min-h-[calc(100vh-150px)] max-w-6xl px-4 py-8 lg:px-8 lg:py-14">
+<main data-dashboard-page="{{ $editable ? 'squad-builder' : 'member-squad' }}" class="hud-squad {{ $editable && $locked && $league->status === \App\Models\League::STATUS_YET_TO_START ? 'pb-56' : '' }} mx-auto min-h-[calc(100vh-150px)] max-w-6xl px-4 py-8 lg:px-8 lg:py-14">
   <a href="{{ route('dashboard.index') }}" class="text-sm font-bold text-white/50 hover:text-uno-lime"><i class="bx bx-arrow-back mr-1"></i> Back to leagues</a>
   <div class="mt-6 flex flex-wrap items-end justify-between gap-5">
     <div><p class="text-xs font-extrabold uppercase tracking-[.22em] text-uno-lime">{{ $league->name }}</p><h1 class="mt-2 flex items-center gap-3 text-4xl font-bold tracking-[-.04em]">@if ($locked && $viewedTeamLogo)<img src="{{ $viewedTeamLogo }}" alt="" class="h-12 w-12 rounded-xl object-cover">@endif{{ $locked ? ($viewedUser->id === auth()->id() ? 'Your locked squad.' : $viewedTeamName."'s squad.") : 'Build your squad.' }}</h1><p class="mt-3 text-sm text-white/50">{{ $locked ? 'This squad is final and cannot be edited.' : 'Pick 11 players and a coach. Every selection is exclusive within this league.' }}</p></div>
@@ -42,7 +42,55 @@
   <section class="hud-progress-strip mt-5" aria-label="Squad progression"><div class="hud-progress-step {{ ! $locked ? 'is-current' : 'is-complete' }}"><span>01</span><strong>Build squad</strong><small>{{ $locked ? 'Complete' : 'In progress' }}</small></div><div class="hud-progress-line"></div><div class="hud-progress-step {{ $locked ? 'is-complete' : '' }}"><span>02</span><strong>Lock formation</strong><small>{{ $locked ? 'Locked' : 'Pending' }}</small></div><div class="hud-progress-line"></div><div class="hud-progress-step {{ $ready ? 'is-complete' : ($locked ? 'is-current' : '') }}"><span>03</span><strong>Ready up</strong><small>{{ $ready ? 'Ready' : ($locked ? 'Waiting' : 'Locked') }}</small></div></section>
 
   @if ($editable && $locked && $league->status === \App\Models\League::STATUS_YET_TO_START)
-    <section class="mt-6 glass-panel rounded-3xl p-5 sm:p-6">
+    @php
+      $powerCards = [
+        \App\Models\LeaguePowerCard::GUARD => ['label' => 'Guard', 'icon' => 'bx bx-shield-quarter', 'copy' => 'Protect one of your players.'],
+        \App\Models\LeaguePowerCard::STEAL => ['label' => 'Steal', 'icon' => 'bx bx-transfer-alt', 'copy' => 'Take a player from an opponent.'],
+        \App\Models\LeaguePowerCard::BOOST => ['label' => 'Boost', 'icon' => 'bx bx-bolt-circle', 'copy' => 'Give an opponent a match boost.'],
+      ];
+    @endphp
+    <section id="powerCardDock" class="power-card-dock" aria-label="Power cards">
+      <div class="power-card-dock-inner">
+        <div class="flex min-w-0 items-center gap-3"><span class="hidden text-xs font-extrabold uppercase tracking-[.2em] text-white/45 sm:block">Power cards</span><div class="power-card-dock-list">
+          @foreach ($powerCards as $type => $powerCard)
+            @php $card = $submittedCards->get($type); @endphp
+            <button type="button" data-power-card-open="{{ $type }}" aria-pressed="{{ $card ? 'true' : 'false' }}" class="power-card-dock-card {{ $card ? 'is-activated' : '' }}" title="Open {{ $powerCard['label'] }} card"><i class="{{ $powerCard['icon'] }}"></i><strong>{{ $powerCard['label'] }}</strong><small>{{ $card ? 'Activated' : 'Play card' }}</small></button>
+          @endforeach
+        </div></div>
+        <span class="hidden text-[10px] uppercase tracking-widest text-white/35 md:block">Tap a card to play</span>
+      </div>
+    </section>
+
+    <div id="powerCardModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#020b15]/85 px-4 py-6 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="powerCardModalTitle">
+      <div class="power-card-modal-panel w-full max-w-lg rounded-[30px] p-5 shadow-uno sm:p-7">
+        <div class="flex items-start justify-between gap-4"><div><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Power card</p><h2 id="powerCardModalTitle" class="mt-2 text-2xl font-black">Choose your advantage</h2></div><button type="button" data-power-card-close class="text-2xl text-white/45 hover:text-white" aria-label="Close"><i class="bx bx-x"></i></button></div>
+        <div class="mt-5 grid gap-4">
+          @foreach ($powerCards as $type => $powerCard)
+            @php $card = $submittedCards->get($type); @endphp
+            <form method="POST" action="{{ route('cards.store', $league) }}" data-power-card data-power-card-form="{{ $type }}" class="{{ $loop->first ? '' : 'hidden' }} rounded-2xl border border-white/10 bg-black/15 p-4">
+              @csrf<input type="hidden" name="card_type" value="{{ $type }}">
+              <div class="power-card-modal-heading"><i class="{{ $powerCard['icon'] }}"></i><div><h3>{{ $powerCard['label'] }}</h3><p>{{ $powerCard['copy'] }}</p></div></div>
+              @if ($card)
+                <div class="mt-5 rounded-xl border border-uno-lime/30 bg-uno-lime/10 px-4 py-3 text-sm font-bold text-uno-lime"><i class="bx bx-check-circle mr-1"></i> This card is already activated.</div>
+              @elseif ($type === \App\Models\LeaguePowerCard::GUARD)
+                <select name="target_player_id" required class="mt-5 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-xs text-white"><option value="">Protect one player</option>@foreach ($squad->selections->where('role', 'player') as $selection)<option value="{{ $selection->player_id }}">{{ $selection->player_data['known_name'] ?? $selection->player_data['name'] }}</option>@endforeach</select>
+                <button type="submit" class="mt-4 w-full rounded-xl bg-uno-lime px-3 py-3 text-xs font-extrabold text-uno-navy hover:bg-white">Activate Guard</button>
+              @elseif ($type === \App\Models\LeaguePowerCard::BOOST)
+                <select name="target_user_id" required class="mt-5 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-xs text-white"><option value="">Choose an opponent</option>@foreach ($opponents->filter(fn ($opponent) => ! empty($opponent['squad'])) as $opponent)<option value="{{ $opponent['id'] }}">{{ $opponent['name'] }}</option>@endforeach</select>
+                <button type="submit" class="mt-4 w-full rounded-xl bg-uno-lime px-3 py-3 text-xs font-extrabold text-uno-navy hover:bg-white">Activate Boost</button>
+              @else
+                <select name="target_user_id" required class="mt-5 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-xs text-white"><option value="">Choose an opponent</option>@foreach ($opponents->filter(fn ($opponent) => ! empty($opponent['squad'])) as $opponent)<option value="{{ $opponent['id'] }}">{{ $opponent['name'] }}</option>@endforeach</select>
+                <select name="target_player_id" required class="mt-2 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-xs text-white"><option value="">Choose their player</option>@foreach ($opponents as $opponent) @foreach ($opponent['squad'] as $player)<option value="{{ $player['id'] }}">{{ $opponent['name'] }} &mdash; {{ $player['name'] }}</option>@endforeach @endforeach</select>
+                <select name="replacement_player_id" required class="mt-2 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-xs text-white"><option value="">Give them your player</option>@foreach ($squad->selections->where('role', 'player') as $selection)<option value="{{ $selection->player_id }}">{{ $selection->player_data['known_name'] ?? $selection->player_data['name'] }}</option>@endforeach</select>
+                <button type="submit" class="mt-4 w-full rounded-xl bg-uno-lime px-3 py-3 text-xs font-extrabold text-uno-navy hover:bg-white">Activate Steal</button>
+              @endif
+            </form>
+          @endforeach
+        </div>
+      </div>
+    </div>
+
+    <section class="legacy-power-cards mt-6 glass-panel rounded-3xl p-5 sm:p-6">
       <div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Power cards</p><h2 class="mt-2 text-xl font-bold">Choose your advantage.</h2></div><p class="text-xs text-white/40">Each card can be submitted once before Ready.</p></div>
       <div class="mt-5 grid gap-3 lg:grid-cols-3">
         @foreach ([\App\Models\LeaguePowerCard::GUARD => 'Guard', \App\Models\LeaguePowerCard::STEAL => 'Steal', \App\Models\LeaguePowerCard::BOOST => 'Boost'] as $type => $label)
@@ -67,7 +115,20 @@
 
   @if ($editable && $locked && $league->status === \App\Models\League::STATUS_YET_TO_START)
     <script>
-      document.querySelectorAll('[data-power-card]').forEach((form) => form.addEventListener('submit', async (event) => {
+      const modal = document.getElementById('powerCardModal');
+      const closeCard = () => { modal?.classList.add('hidden'); modal?.classList.remove('flex'); document.body.classList.remove('modal-open'); };
+      document.querySelectorAll('[data-power-card-open]').forEach((card) => card.addEventListener('click', () => {
+        document.querySelectorAll('[data-power-card-form]').forEach((form) => form.classList.toggle('hidden', form.dataset.powerCardForm !== card.dataset.powerCardOpen));
+        const form = document.querySelector(`[data-power-card-form="${card.dataset.powerCardOpen}"]`);
+        const title = form?.querySelector('.power-card-modal-heading h3')?.textContent || 'Power card';
+        const heading = document.getElementById('powerCardModalTitle');
+        if (heading) heading.textContent = title;
+        modal?.classList.remove('hidden'); modal?.classList.add('flex'); document.body.classList.add('modal-open');
+      }));
+      document.querySelectorAll('[data-power-card-close]').forEach((button) => button.addEventListener('click', closeCard));
+      modal?.addEventListener('click', (event) => { if (event.target === modal) closeCard(); });
+      document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeCard(); });
+      document.querySelectorAll('[data-power-card-form]').forEach((form) => form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const button = form.querySelector('button[type="submit"]');
         if (!button) return;
@@ -76,8 +137,13 @@
           const response = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
           const data = await response.json().catch(() => ({}));
           if (!response.ok) throw new Error(data.message || Object.values(data.errors || {}).flat()[0] || 'Unable to submit card.');
+          const card = document.querySelector(`[data-power-card-open="${form.dataset.powerCardForm}"]`);
+          if (card) { card.classList.add('is-activated'); card.setAttribute('aria-pressed', 'true'); const state = card.querySelector('small'); if (state) state.textContent = 'Activated'; }
+          form.querySelectorAll('select').forEach((select) => { select.disabled = true; });
+          button.remove();
+          const status = document.createElement('div'); status.className = 'mt-4 rounded-xl border border-uno-lime/30 bg-uno-lime/10 px-4 py-3 text-sm font-bold text-uno-lime'; status.innerHTML = '<i class="bx bx-check-circle mr-1"></i> This card is already activated.'; form.appendChild(status);
           window.showToast?.(data.message || 'Card submitted.');
-          if (window.DashboardSPA) window.DashboardSPA.navigate(window.location.href, { replace: true }); else window.location.reload();
+          closeCard();
         } catch (error) {
           window.showToast?.(error.message, 'error');
           button.disabled = false;

@@ -147,7 +147,7 @@ if (dashboardRoot && dashboardPath(window.location.href)) {
 
   document.addEventListener('submit', (event) => {
     const form = event.target.closest?.('form');
-    if (!form || form.dataset.spa === 'false' || !dashboardPath(form.action)) return;
+    if (!form || form.dataset.spa === 'false' || form.matches('[data-power-card]') || !dashboardPath(form.action)) return;
     submitMutation(form, event);
   }, true);
 

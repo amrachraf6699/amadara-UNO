@@ -186,6 +186,22 @@
     .hud-squad .formation-slot:hover { transform: translateY(-3px); border-color: rgba(125,237,25,.55); }
     .hud-squad [data-power-card] { border-color: rgba(255,255,255,.10); background: linear-gradient(145deg, rgba(255,255,255,.07), rgba(0,0,0,.13)); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
     .hud-squad [data-power-card]:hover { transform: translateY(-3px); border-color: rgba(125,237,25,.4); box-shadow: 0 15px 34px rgba(0,0,0,.2); }
+    .legacy-power-cards { display: none; }
+    .power-card-dock { position: fixed; right: 0; bottom: 1rem; left: 0; z-index: 40; pointer-events: none; }
+    .power-card-dock-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: min(100% - 2rem, 760px); margin: 0 auto; padding: .65rem .8rem .75rem; border: 1px solid rgba(255,255,255,.16); border-radius: 24px; background: rgba(3,19,35,.9); box-shadow: 0 18px 55px rgba(0,0,0,.5), inset 0 1px rgba(255,255,255,.08); backdrop-filter: blur(22px); pointer-events: auto; }
+    .power-card-dock-list { display: flex; gap: .65rem; overflow-x: auto; }
+    .power-card-dock-card { display: grid; min-width: 5.6rem; place-items: center; gap: .15rem; aspect-ratio: .72; padding: .55rem .45rem; border: 1px solid rgba(255,255,255,.28); border-radius: 14px; color: #fff; background: linear-gradient(145deg, rgba(255,255,255,.12), rgba(7,29,51,.88)); box-shadow: 0 6px 18px rgba(0,0,0,.25), inset 0 0 0 2px rgba(255,255,255,.04); transition: transform .25s ease, border-color .25s ease, color .25s ease, box-shadow .25s ease; }
+    .power-card-dock-card:hover, .power-card-dock-card:focus-visible { transform: translateY(-8px) rotate(-2deg); border-color: #fff; color: #fff; box-shadow: 0 14px 28px rgba(0,0,0,.38), 0 0 20px rgba(255,255,255,.12); outline: none; }
+    .power-card-dock-card i { font-size: 1.65rem; }
+    .power-card-dock-card strong { font-size: .72rem; font-weight: 900; }
+    .power-card-dock-card small { font-size: .5rem; text-transform: uppercase; letter-spacing: .08em; opacity: .55; }
+    .power-card-dock-card.is-activated { border-color: rgba(125,237,25,.75); color: #7dec19; background: linear-gradient(145deg, rgba(125,237,25,.2), rgba(7,29,51,.92)); box-shadow: 0 0 24px rgba(125,237,25,.16), inset 0 0 0 2px rgba(125,237,25,.08); }
+    .power-card-dock-card.is-activated:hover, .power-card-dock-card.is-activated:focus-visible { border-color: #7dec19; color: #7dec19; box-shadow: 0 14px 28px rgba(0,0,0,.38), 0 0 28px rgba(125,237,25,.26); }
+    .power-card-modal-panel { border: 1px solid rgba(255,255,255,.16); background: linear-gradient(145deg, rgba(8,39,70,.96), rgba(3,20,37,.96)); }
+    .power-card-modal-heading { display: flex; align-items: center; gap: .8rem; color: #fff; }
+    .power-card-modal-heading i { font-size: 2.5rem; }
+    .power-card-modal-heading h3 { font-size: 1.35rem; font-weight: 900; }
+    .power-card-modal-heading p { margin-top: .2rem; color: rgba(255,255,255,.5); font-size: .75rem; }
     @keyframes hud-pulse { 50% { opacity: .35; transform: scale(.72); } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
     @media (max-width: 639px) { .hud-panel { border-radius: 20px; } .hud-title { letter-spacing: -.045em; } }
@@ -212,6 +228,9 @@
       .hud-squad .grid-cols-2 { grid-template-columns: 1fr; }
       .hud-squad [data-power-card] select { min-width: 0; font-size: .7rem; }
       .hud-squad aside { width: 100%; }
+      .power-card-dock-inner { width: calc(100% - 1rem); padding: .45rem; border-radius: 18px; }
+      .power-card-dock-list { width: 100%; justify-content: center; }
+      .power-card-dock-card { min-width: 5.1rem; }
       .dashboard-table-wrap { border-radius: 12px; }
       .dashboard-leagues-table { min-width: 620px; }
       .dashboard-leagues-table th, .dashboard-leagues-table td { padding: .8rem .75rem; font-size: .72rem; }

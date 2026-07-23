@@ -42,7 +42,7 @@ class SquadTest extends TestCase
     {
         $user = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach($user);
         $this->actingAs($user)->postJson(route('squads.store', $league), $this->payload());
-        $this->actingAs($user)->get(route('squads.show', $league))->assertOk()->assertSee('Your locked squad.')->assertSee('Locked 4-3-3')->assertSee('Marc-André ter Stegen');
+        $this->actingAs($user)->get(route('squads.show', $league))->assertOk()->assertSee('Your locked squad.')->assertSee('Locked 4-3-3')->assertSee('Marc-André ter Stegen')->assertSee('powerCardDock', false)->assertSee('powerCardModal', false)->assertSee('data-power-card-open="guard"', false);
     }
 
     public function test_player_can_mark_their_locked_squad_ready(): void
