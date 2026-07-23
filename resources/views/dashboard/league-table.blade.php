@@ -111,8 +111,7 @@
       <section class="mt-8">
         <div class="flex items-end justify-between gap-4">
           <div>
-            <p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Competitors</p>
-            <h2 class="mt-2 text-2xl font-bold">The teams.</h2>
+            <h2 class="mt-2 text-2xl font-bold">Competitors</h2>
           </div><span class="text-xs text-white/40">{{ $league->users->count() }} teams</span>
         </div>
         <div class="teams-scroller mt-5 flex w-full min-w-0 snap-x snap-mandatory flex-nowrap gap-3 overflow-x-auto px-1 py-3 pb-5 scrollbar-thin">
@@ -174,8 +173,7 @@
       <section class="mt-12">
         <div class="flex items-end justify-between gap-4">
           <div>
-            <p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Match centre</p>
-            <h2 class="mt-2 text-2xl font-bold">Every fixture.</h2>
+            <h2 class="mt-2 text-2xl font-bold">Match centre</h2>
           </div><span id="fixtureCounter" class="text-xs font-extrabold uppercase tracking-widest text-white/40">1 /
             {{ $matches->count() }}</span>
         </div>
@@ -267,8 +265,7 @@
       </section>@endif
 
       <section class="mt-12">
-        <p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Table</p>
-        <h2 class="mt-2 text-2xl font-bold">Final standings.</h2>
+        <h2 class="mt-2 text-2xl font-bold">Table</h2>
         <div class="results-table-wrap mt-4">
           <table class="results-table standings-table w-full min-w-[620px] text-left text-sm">
             <thead>
@@ -308,8 +305,7 @@
     @endif
     @if ($simulation)
       <section class="mt-12">
-        <p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Top scorers</p>
-        <h2 class="mt-2 text-2xl font-bold">Golden boot table.</h2>
+        <h2 class="mt-2 text-2xl font-bold">Top scorers</h2>
         <div class="results-table-wrap mt-4">
           <table class="results-table scorers-table w-full min-w-[560px] text-left text-sm">
             <thead>
@@ -320,10 +316,9 @@
                 <th class="text-right">Goals</th>
               </tr>
             </thead>
-            <tbody>@foreach ($scorerTotals as $rank => $scorer)<tr>
+            <tbody>@foreach ($scorerTotals as $rank => $scorer) @php $scorerMember = $league->users->firstWhere('id', $scorer['user_id']); $scorerLogo = $teamLogo($scorerMember); @endphp<tr>
               <td data-label="Rank" class="font-bold text-white/40">{{ $rank + 1 }}</td>
-              <td data-label="Player" class="font-bold"><span dir="auto"
-                  class="{{ $containsArabic($scorer['name']) ? 'font-arabic' : '' }}">{{ $scorer['name'] }}</span></td>
+              <td data-label="Player" class="font-bold"><span class="inline-flex items-center gap-3"><span class="team-avatar team-avatar-sm shrink-0">@if ($scorerLogo)<img src="{{ $scorerLogo }}" alt="" class="h-full w-full object-cover">@else<i class="bx bx-shield"></i>@endif</span><span dir="auto" class="{{ $containsArabic($scorer['name']) ? 'font-arabic' : '' }}">{{ $scorer['name'] }}</span></span></td>
               <td data-label="Team" class="text-white/60"><span dir="auto"
                   class="{{ $containsArabic($scorer['team']) ? 'font-arabic' : '' }}">{{ $scorer['team'] }}</span></td>
               <td data-label="Goals" class="text-right text-lg font-extrabold text-uno-lime">{{ $scorer['goals'] }}</td>
