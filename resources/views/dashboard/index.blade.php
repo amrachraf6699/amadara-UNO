@@ -196,6 +196,8 @@
     document.querySelector('[data-open-new-league]')?.addEventListener('click', () => showModal('leagueOptionsModal'));
     document.querySelector('[data-show-create]')?.addEventListener('click', () => showModal('createLeagueModal'));
     document.querySelector('[data-show-join]')?.addEventListener('click', () => showModal('joinLeagueModal'));
+    const inviteCode = new URLSearchParams(window.location.search).get('join');
+    if (inviteCode && document.getElementById('league-code')) { document.getElementById('league-code').value = inviteCode.toUpperCase().slice(0, 5); showModal('joinLeagueModal'); }
     document.querySelectorAll('[data-close-modal]').forEach((button) => button.addEventListener('click', closeModals));
     document.querySelectorAll('[role="dialog"]').forEach((modal) => modal.addEventListener('click', (event) => { if (event.target === modal) closeModals(); }));
     document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModals(); });

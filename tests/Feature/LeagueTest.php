@@ -65,6 +65,17 @@ class LeagueTest extends TestCase
         $response->assertDontSee('<footer', false);
     }
 
+    public function test_league_page_exposes_code_and_invitation_copy_actions(): void
+    {
+        $user = User::factory()->create();
+        $league = League::factory()->create();
+        $league->users()->attach($user);
+
+        $response = $this->actingAs($user)->get(route('leagues.show', $league));
+
+        $response->assertOk()->assertSee('bx-clipboard')->assertSee('bx-user-plus')->assertSee('data-copy-value="'.$league->code.'"', false)->assertSee('join='.$league->code, false);
+    }
+
     public function test_user_can_create_a_league_and_is_added_as_a_member(): void
     {
         $user = User::factory()->create();

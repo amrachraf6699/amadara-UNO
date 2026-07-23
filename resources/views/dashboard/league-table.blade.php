@@ -34,7 +34,7 @@
       <div>
         <h1 class="mt-2 text-4xl font-bold tracking-[-.04em] font-extrabold uppercase text-uno-lime">{{ $league->name }}</h1>
       </div>
-      <div class="flex flex-wrap items-center gap-3"><span
+      <div class="flex flex-wrap items-center gap-3"><button type="button" data-copy-value="{{ $league->code }}" data-copy-label="League code" class="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-extrabold text-white/70 transition hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy" title="Copy league code"><i class="bx bx-clipboard text-lg"></i><span class="hidden sm:inline">{{ $league->code }}</span></button><button type="button" data-copy-value="{{ route('dashboard.index', ['join' => $league->code]) }}" data-copy-label="Invitation link" class="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-extrabold text-white/70 transition hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy" title="Copy invitation link" aria-label="Copy invitation link"><i class="bx bx-user-plus text-lg"></i><span class="hidden sm:inline">Invite</span></button><span
           class="rounded-full bg-white/10 px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-white/70">{{ $simulationInProgress ? 'Simulation in progress' : ucfirst(str_replace('_', ' ', $league->status)) }}</span>@if (!$simulation && $league->owner_id === auth()->id() && $league->status === \App\Models\League::STATUS_YET_TO_START && !$simulationInProgress && $league->readyUsers->count() === $league->users->count() && $league->users->isNotEmpty())
             <form method="POST" action="{{ route('leagues.start', $league) }}">@csrf<button type="submit"
                 class="rounded-xl bg-uno-lime px-4 py-2 text-xs font-extrabold text-uno-navy hover:bg-white">Start
@@ -329,6 +329,16 @@
       </section>
     @endif
   </main>
+  <script>
+    (() => {
+      const fallbackCopy = (value) => { const input = document.createElement('textarea'); input.value = value; input.style.position = 'fixed'; input.style.opacity = '0'; document.body.appendChild(input); input.select(); document.execCommand('copy'); input.remove(); };
+      document.querySelectorAll('[data-copy-value]').forEach((button) => button.addEventListener('click', async () => {
+        const value = button.dataset.copyValue || '';
+        try { if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(value); else fallbackCopy(value); window.showToast?.(`${button.dataset.copyLabel || 'Value'} copied.`); }
+        catch (error) { try { fallbackCopy(value); window.showToast?.(`${button.dataset.copyLabel || 'Value'} copied.`); } catch (fallbackError) { window.showToast?.('Unable to copy. Please copy it manually.', 'error'); } }
+      }));
+    })();
+  </script>
   <style>
     [data-confetti] i {
       position: absolute;
