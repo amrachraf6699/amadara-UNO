@@ -33,6 +33,8 @@
     :root { color-scheme: dark; }
     html { scroll-behavior: smooth; }
     body { font-family: "Space Grotesk", sans-serif; background: #031323; color: #f7fbff; }
+    .hud-results { box-sizing: border-box; width: 100%; padding-inline: 1rem; }
+    @media (min-width: 1024px) { .hud-results { padding-inline: 2rem; } }
     .font-arabic { font-family: "Tajawal", sans-serif; }
     [dir="auto"] { unicode-bidi: plaintext; }
     .team-avatar { display: grid; place-items: center; overflow: hidden; border-radius: 999px; background: linear-gradient(145deg, rgba(8,120,209,.35), rgba(125,237,25,.12)); color: #7dec19; }

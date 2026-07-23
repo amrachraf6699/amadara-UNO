@@ -119,7 +119,7 @@
             <h2 class="mt-2 text-2xl font-bold">The teams.</h2>
           </div><span class="text-xs text-white/40">{{ $league->users->count() }} teams</span>
         </div>
-        <div class="mt-5 flex max-w-full gap-3 overflow-x-auto px-1 py-3 pb-5 scrollbar-thin">
+        <div class="teams-scroller mt-5 flex w-full min-w-0 snap-x snap-mandatory flex-nowrap gap-3 overflow-x-auto px-1 py-3 pb-5 scrollbar-thin">
           @foreach ($league->users as $member)
             @php $memberSquad = $league->squads->firstWhere('user_id', $member->id);
               $teamSelections = $league->effectiveSelections->where('user_id', $member->id)->where('role', 'player');
@@ -127,7 +127,7 @@
               $modalId = 'team-modal-' . $member->id;
             $memberName = $member->name; @endphp<button
               type="button" data-team-open="{{ $modalId }}"
-              class="team-avatar team-avatar-lg shrink-0 border-2 border-white/20 bg-uno-blue/30 text-2xl text-uno-lime shadow-xl transition hover:-translate-y-1 hover:border-uno-lime focus:outline-none focus:ring-2 focus:ring-uno-lime">@if ($logo)<img
+              class="team-avatar team-avatar-lg shrink-0 snap-start border-2 border-white/20 bg-uno-blue/30 text-2xl text-uno-lime shadow-xl transition hover:-translate-y-1 hover:border-uno-lime focus:outline-none focus:ring-2 focus:ring-uno-lime">@if ($logo)<img
               src="{{ $logo }}" alt="{{ $memberName }} logo" class="h-full w-full object-cover">@else<i
                 class="bx bx-shield"></i>@endif<span class="sr-only">View {{ $memberName }}</span></button>
             <div id="{{ $modalId }}" data-team-modal
@@ -170,8 +170,7 @@
                 </div>
               </div>
                 </div>
-              </details>
-          </div>@endforeach
+          @endforeach
         </div>
       </section>
       <script>document.querySelectorAll('[data-team-open]').forEach((button) => button.addEventListener('click', () => { const modal = document.getElementById(button.dataset.teamOpen); modal.classList.remove('hidden'); modal.classList.add('flex'); document.body.classList.add('modal-open'); })); document.querySelectorAll('[data-team-close]').forEach((button) => button.addEventListener('click', () => { const modal = button.closest('[data-team-modal]'); modal.classList.add('hidden'); modal.classList.remove('flex'); document.body.classList.remove('modal-open'); })); document.querySelectorAll('[data-team-modal]').forEach((modal) => modal.addEventListener('click', (event) => { if (event.target === modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); document.body.classList.remove('modal-open'); } }));</script>
@@ -250,6 +249,8 @@
               </div>@if ($match->decisive_factors)
                 <p class="mt-3 text-xs leading-5 text-white/40"><span class="font-bold text-white/65">Decisive factors:</span>
               {{ collect($match->decisive_factors)->join(' · ') }}</p>@endif
+                </div>
+              </details>
           </div>@endforeach
         </div>
       </section>
@@ -362,7 +363,8 @@
       const label = document.getElementById('fixtureLabel');
       const previous = document.getElementById('fixturePrevious');
       const next = document.getElementById('fixtureNext');
-      const show = (index) => { current = (index + cards.length) % cards.length; cards.forEach((card, i) => card.classList.toggle('hidden', i !== current)); if (counter) counter.textContent = `${current + 1} / ${cards.length}`; if (label) label.textContent = `Fixture ${current + 1}`; previous.disabled = cards.length < 2; next.disabled = cards.length < 2; };
+      const show = (index) => { current = (index + cards.length) % cards.length; cards.forEach((card, i) => { card.classList.toggle('hidden', i !== current); card.style.display = i === current ? '' : 'none'; }); if (counter) counter.textContent = `${current + 1} / ${cards.length}`; if (label) label.textContent = `Fixture ${current + 1}`; previous.disabled = cards.length < 2; next.disabled = cards.length < 2; };
+      show(0);
       previous?.addEventListener('click', () => show(current - 1));
       next?.addEventListener('click', () => show(current + 1));
       document.addEventListener('keydown', (event) => { if (event.key === 'ArrowLeft') show(current - 1); if (event.key === 'ArrowRight') show(current + 1); });
