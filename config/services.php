@@ -49,9 +49,4 @@ return [
         'redirect' => env('FACEBOOK_REDIRECT_URI'),
     ],
 
-    'footballdata' => [
-        'base_url' => env('FOOTBALLDATA_BASE_URL', 'https://footballdata.io/api/v1'),
-        'api_key' => env('FOOTBALLDATA_API_KEY'),
-    ],
-
 ];

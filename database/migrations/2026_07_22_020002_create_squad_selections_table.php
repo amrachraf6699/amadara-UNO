@@ -12,12 +12,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('squad_id')->constrained()->cascadeOnDelete();
             $table->foreignId('league_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('football_player_id')->constrained()->restrictOnDelete();
+            $table->unsignedBigInteger('player_id');
+            $table->json('player_data');
             $table->string('slot_key', 30);
             $table->string('role', 10);
             $table->timestamps();
             $table->unique(['squad_id', 'slot_key']);
-            $table->unique(['league_id', 'football_player_id']);
+            $table->unique(['league_id', 'player_id']);
         });
     }
 
