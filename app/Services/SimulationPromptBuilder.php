@@ -65,22 +65,20 @@ class SimulationPromptBuilder
         $input = $this->json($payload);
 
         return <<<PROMPT
-You are Amadara UNO's controlled, reproducible football match simulation engine.
+You are Amadara UNO's controlled football simulation engine. Simulate the complete league using only the supplied JSON. Fixture IDs, user IDs, player IDs, formations, coaches, rosters, slots, and resolved power-card decisions are authoritative; never invent them. Evaluate players at peak ability, not current age, form, injuries, or fame.
 
-Simulate the complete league using only the supplied JSON. Supplied fixture IDs, user IDs, player IDs, formations, coaches, roster members, slot assignments, and resolved power-card decisions are authoritative. Never invent a player, coach, team, ID, formation, card, or fixture. You may use broad football knowledge to judge peak role suitability and tactical tendencies. Evaluate players at peak career condition, not current age, form, injuries, or fame.
+Use realistic controlled variance. Establish the baseline from tactical fit, squad balance, chemistry, coach influence, home advantage, and power cards, then allow credible errors, momentum, set pieces, fatigue, cards, and late decisions to create upsets. Fame alone must never decide a match.
 
-Use controlled variance: tactical fit, squad balance, chemistry, coach influence, and power-card effects establish the baseline, while credible errors, momentum swings, set pieces, fatigue, and late decisions can produce realistic upsets. Fame alone must never decide a match. Keep scores and statistics realistic for football.
+For each match consider coach identity and flexibility, formation strengths and weaknesses, build-up, pressing and press resistance, defensive-line height, width, midfield control, transitions, counter-attacks, set pieces, role suitability, shared-club and nationality links, positional familiarity, complementary roles, spacing, partnerships, coach-player fit, key battles, fatigue, cards, injuries, and adjustments after major events. Include believable substitutions and coach decisions using only supplied players.
 
-For every match evaluate the coach's tactical identity and flexibility; formation strengths and weaknesses; build-up style; pressing intensity and press resistance; defensive-line height; width and overloads; midfield control; transition speed; counter-attacking opportunities; set-piece threat and weakness; role suitability; chemistry links from shared clubs, nationality/language compatibility, positional familiarity, complementary roles, formation spacing, nearby partnerships, and coach-player fit; key one-versus-one battles; home advantage; fatigue; cards and injuries; and tactical changes after goals, cards, injuries, or momentum shifts. Include believable substitutions and coach adjustments using only supplied players.
-
-Return valid JSON only. Do not return Markdown, commentary, duplicate fixtures, unresolved card decisions, or final league points. The application calculates standings locally.
+Return valid JSON only: no Markdown, commentary, duplicate fixtures, unresolved card decisions, or final league points. Keep all descriptions concise: one short sentence for events and impacts, a 1–2 sentence narrative, and a short display narrative.
 
 OUTPUT RULES:
 1. Return exactly one match for every supplied fixture and every league user exactly once in standings_projection.
-2. Return separate home_goal_scorers and away_goal_scorers. Scorer count must equal the relevant score and each scorer must belong to that team.
-3. Return 10 to 18 chronological events per match. Include goals plus a believable mixture of chances, saves, blocks, cards, substitutions, injuries, tactical changes, set pieces, momentum swings, missed chances, and coach instructions. Every event must be consistent with the score, timeline, roster, and team IDs.
-4. Return three or more match phases, tactical plans for both teams, coach decisions, chemistry/link quality, key battles, match statistics, performance ratings, player impacts with tactical reasons, decisive factors, a detailed report, and a short display narrative.
-5. Keep possession totals exactly 100. Keep shots on target no higher than shots and all statistics within realistic ranges.
+2. Return separate home_goal_scorers and away_goal_scorers. Scorer counts must equal the scores, and scorers must belong to the correct team.
+3. Return exactly 10 chronological events per match, including goals when applicable and a compact mix of chances, saves, blocks, cards, substitutions, injuries, tactical changes, set pieces, momentum, missed chances, and coach instructions. Every event must match the score, timeline, roster, and team IDs.
+4. Return three phases, concise tactical plans for both teams, one or two coach decisions, chemistry/link quality, key battles, realistic statistics, ratings, player impacts, decisive factors, a match report, and a display narrative.
+5. Keep possession exactly 100, shots on target no higher than shots, and all statistics realistic and within the output schema's ranges.
 6. If the input cannot be satisfied, return {"error":{"code":"INVALID_SIMULATION_INPUT","message":"short explanation"}}.
 
 INPUT JSON:
