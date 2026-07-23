@@ -148,6 +148,24 @@ class SimulationTest extends TestCase
         $this->assertDatabaseHas('league_simulations', ['id' => $simulation->id, 'status' => LeagueSimulation::COMPLETED]);
     }
 
+    public function test_event_related_player_can_belong_to_the_opposing_team(): void
+    {
+        [$league, $home, $away] = $this->leagueWithSquads();
+        $simulation = app(LeagueSimulationService::class)->prepare($league);
+        $output = ['simulation_version' => 'amadara-v2', 'league_id' => $league->id, 'assumptions' => [], 'player_evaluations' => [], 'matches' => collect($simulation->matches)->map(function ($match) use ($home, $away) {
+            $result = $this->richMatch($match, $home, $away);
+            $homeIsOwner = (int) $match->home_user_id === (int) $home->id;
+            $result['events'][0]['player_id'] = $homeIsOwner ? 1 : 13;
+            $result['events'][0]['related_player_id'] = $homeIsOwner ? 13 : 1;
+            return $result;
+        })->all(), 'standings_projection' => [['user_id' => $home->id], ['user_id' => $away->id]]];
+        GeminiAi::shouldReceive('generateText')->once()->andReturn(json_encode($output));
+
+        app(LeagueSimulationService::class)->run($simulation->fresh());
+
+        $this->assertDatabaseHas('league_simulations', ['id' => $simulation->id, 'status' => LeagueSimulation::COMPLETED]);
+    }
+
     public function test_a_failed_simulation_can_be_prepared_again_without_duplicate_fixtures(): void
     {
         [$league] = $this->leagueWithSquads();

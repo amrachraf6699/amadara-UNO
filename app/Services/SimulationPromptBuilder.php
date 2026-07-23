@@ -71,15 +71,16 @@ Use realistic controlled variance. Establish the baseline from tactical fit, squ
 
 For each match consider coach identity and flexibility, formation strengths and weaknesses, build-up, pressing and press resistance, defensive-line height, width, midfield control, transitions, counter-attacks, set pieces, role suitability, shared-club and nationality links, positional familiarity, complementary roles, spacing, partnerships, coach-player fit, key battles, fatigue, cards, injuries, and adjustments after major events. Include believable substitutions and coach decisions using only supplied players.
 
-Return valid JSON only: no Markdown, commentary, duplicate fixtures, unresolved card decisions, or final league points. Keep all descriptions concise: one short sentence for events and impacts, a 1–2 sentence narrative, and a short display narrative.
+Return valid JSON only: no Markdown, code fences, commentary, duplicate fixtures, unresolved card decisions, or final league points. Follow the required output shape exactly. Use UTF-8 text. Keep all descriptions concise: one short sentence for events and impacts, a 1–2 sentence narrative, and a short display narrative.
 
 OUTPUT RULES:
 1. Return exactly one match for every supplied fixture and every league user exactly once in standings_projection.
 2. Return separate home_goal_scorers and away_goal_scorers. Scorer counts must equal the scores, and scorers must belong to the correct team.
 3. Return exactly 10 chronological events per match, including goals when applicable and a compact mix of chances, saves, blocks, cards, substitutions, injuries, tactical changes, set pieces, momentum, missed chances, and coach instructions. Every event must match the score, timeline, roster, and team IDs.
 4. Return three phases, concise tactical plans for both teams, one or two coach decisions, chemistry/link quality, key battles, realistic statistics, ratings, player impacts, decisive factors, a match report, and a display narrative.
-5. Keep possession exactly 100, shots on target no higher than shots, and all statistics realistic and within the output schema's ranges.
-6. If the input cannot be satisfied, return {"error":{"code":"INVALID_SIMULATION_INPUT","message":"short explanation"}}.
+5. Use integer ratings from 0 to 100 and integer player impacts from -100 to 100. Never use a 0–10 scale. For each event, player_id must belong to that event's team. related_player_id may belong to either team; use 0 only when no player is involved.
+6. Keep possession exactly 100, shots on target no higher than shots, and all statistics realistic and within the output schema's ranges.
+7. If the input cannot be satisfied, return {"error":{"code":"INVALID_SIMULATION_INPUT","message":"short explanation"}}.
 
 INPUT JSON:
 {$input}
