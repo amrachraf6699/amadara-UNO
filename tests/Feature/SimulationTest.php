@@ -130,6 +130,24 @@ class SimulationTest extends TestCase
         $this->assertDatabaseHas('league_simulations', ['id' => $simulation->id, 'status' => LeagueSimulation::COMPLETED]);
     }
 
+    public function test_model_ten_point_ratings_and_impacts_are_normalized(): void
+    {
+        [$league, $home, $away] = $this->leagueWithSquads();
+        $simulation = app(LeagueSimulationService::class)->prepare($league);
+        $output = ['simulation_version' => 'amadara-v2', 'league_id' => $league->id, 'assumptions' => [], 'player_evaluations' => [], 'matches' => collect($simulation->matches)->map(function ($match) use ($home, $away) {
+            $result = $this->richMatch($match, $home, $away);
+            $result['home_performance_rating'] = 8.8;
+            $result['away_performance_rating'] = 6.9;
+            $result['player_impacts'][0]['impact'] = 9.2;
+            return $result;
+        })->all(), 'standings_projection' => [['user_id' => $home->id], ['user_id' => $away->id]]];
+        GeminiAi::shouldReceive('generateText')->once()->andReturn(json_encode($output));
+
+        app(LeagueSimulationService::class)->run($simulation->fresh());
+
+        $this->assertDatabaseHas('league_simulations', ['id' => $simulation->id, 'status' => LeagueSimulation::COMPLETED]);
+    }
+
     public function test_a_failed_simulation_can_be_prepared_again_without_duplicate_fixtures(): void
     {
         [$league] = $this->leagueWithSquads();

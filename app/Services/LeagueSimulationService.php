@@ -65,6 +65,7 @@ class LeagueSimulationService
             $raw = GeminiAi::generateText($prompt, $options);
             $simulation->update(['raw_response' => is_string($raw) ? $raw : json_encode($raw, JSON_THROW_ON_ERROR)]);
             $decoded = $this->decode($raw);
+            $decoded = $this->normalizeModelScales($decoded);
             $errors = $this->validator->validate($decoded, $payload);
             if ($errors) {
                 Log::warning('Gemini simulation response failed validation', [
@@ -122,6 +123,27 @@ class LeagueSimulationService
             ]);
             throw new InvalidSimulationResult(['Response was not valid JSON.']);
         }
+        return $result;
+    }
+
+    private function normalizeModelScales(array $result): array
+    {
+        foreach ($result['matches'] ?? [] as $matchIndex => $match) {
+            foreach (['home_performance_rating', 'away_performance_rating'] as $field) {
+                if (isset($match[$field]) && is_numeric($match[$field]) && abs((float) $match[$field]) <= 10) {
+                    $match[$field] = (int) round((float) $match[$field] * 10);
+                }
+            }
+
+            foreach ($match['player_impacts'] ?? [] as $impactIndex => $impact) {
+                if (isset($impact['impact']) && is_numeric($impact['impact']) && abs((float) $impact['impact']) <= 10) {
+                    $impact['impact'] = (int) round((float) $impact['impact'] * 10);
+                }
+                $match['player_impacts'][$impactIndex] = $impact;
+            }
+            $result['matches'][$matchIndex] = $match;
+        }
+
         return $result;
     }
 
