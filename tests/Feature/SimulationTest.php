@@ -7,6 +7,7 @@ use App\Models\League;
 use App\Models\LeagueSimulation;
 use App\Models\User;
 use App\Services\LeagueSimulationService;
+use App\Services\SimulationPromptBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -29,18 +30,67 @@ class SimulationTest extends TestCase
         return [$league->fresh(), $home, $away];
     }
 
+    private function richMatch($match, User $home, User $away): array
+    {
+        $homeIsOwner = (int) $match->home_user_id === (int) $home->id;
+        $homeScore = $homeIsOwner ? 2 : 0;
+        $awayScore = $homeIsOwner ? 0 : 2;
+        $homePlayer = $homeIsOwner ? 1 : 13;
+        $awayPlayer = $homeIsOwner ? 13 : 1;
+        $homeScorers = $homeScore ? [['user_id' => $match->home_user_id, 'player_id' => $homePlayer, 'minute' => 12, 'description' => 'A composed finish.'], ['user_id' => $match->home_user_id, 'player_id' => $homePlayer + 1, 'minute' => 67, 'description' => 'A late run is rewarded.']] : [];
+        $awayScorers = $awayScore ? [['user_id' => $match->away_user_id, 'player_id' => $awayPlayer, 'minute' => 34, 'description' => 'A quick transition ends in a goal.'], ['user_id' => $match->away_user_id, 'player_id' => $awayPlayer + 1, 'minute' => 81, 'description' => 'A precise finish from the edge.']] : [];
+        $winnerUser = $homeScore > $awayScore ? $match->home_user_id : $match->away_user_id;
+        $winnerPlayer = $homeScore > $awayScore ? $homePlayer : $awayPlayer;
+        $events = collect(range(1, 10))->map(fn ($index) => [
+            'minute' => $index * 7,
+            'type' => $index === 2 || $index === 8 ? 'goal' : 'tactical',
+            'team_user_id' => $index === 2 || $index === 8 ? $winnerUser : ($index % 2 ? $match->home_user_id : $match->away_user_id),
+            'player_id' => $index === 2 || $index === 8 ? $winnerPlayer : ($index % 2 ? $homePlayer : $awayPlayer),
+            'description' => 'The teams adjust their shape and tempo.',
+        ])->all();
+
+        return [
+            'fixture_id' => $match->fixture_id, 'home_user_id' => $match->home_user_id, 'away_user_id' => $match->away_user_id,
+            'home_score' => $homeScore, 'away_score' => $awayScore, 'result' => $homeScore > $awayScore ? 'HOME_WIN' : 'AWAY_WIN',
+            'home_goal_scorers' => $homeScorers, 'away_goal_scorers' => $awayScorers,
+            'tactical_analysis' => [
+                'home_plan' => ['approach' => 'balanced', 'build_up' => 'short', 'pressing' => 'medium', 'defensive_line' => 'medium', 'width' => 'wide', 'transition' => 'quick', 'set_piece_plan' => 'near-post', 'coach_intent' => 'control'],
+                'away_plan' => ['approach' => 'direct', 'build_up' => 'mixed', 'pressing' => 'medium', 'defensive_line' => 'medium', 'width' => 'narrow', 'transition' => 'counter', 'set_piece_plan' => 'deep runs', 'coach_intent' => 'stay compact'],
+                'chemistry' => ['home' => 75, 'away' => 72, 'home_links' => [], 'away_links' => []],
+                'key_battles' => [['home_player_id' => $homePlayer, 'away_player_id' => $awayPlayer, 'area' => 'central transition', 'edge' => 'HOME', 'reason' => 'Better spacing.']],
+                'phases' => [['label' => 'opening', 'start_minute' => 1, 'end_minute' => 30, 'dominant_user_id' => $match->home_user_id, 'momentum' => 'home pressure', 'tactical_note' => 'The home side builds patiently.'], ['label' => 'middle', 'start_minute' => 31, 'end_minute' => 65, 'dominant_user_id' => $match->away_user_id, 'momentum' => 'away response', 'tactical_note' => 'Transitions become more important.'], ['label' => 'closing', 'start_minute' => 66, 'end_minute' => 90, 'dominant_user_id' => $match->home_user_id, 'momentum' => 'home control', 'tactical_note' => 'The lead is protected.']],
+                'coach_decisions' => [['minute' => 55, 'user_id' => $match->home_user_id, 'decision' => 'Raise the press', 'reason' => 'Recover possession higher.'], ['minute' => 70, 'user_id' => $match->away_user_id, 'decision' => 'Add a forward', 'reason' => 'Chase the result.']],
+            ],
+            'match_stats' => ['home' => ['possession' => 56, 'shots' => 14, 'shots_on_target' => 6, 'expected_goals' => 1.8, 'corners' => 6, 'fouls' => 10, 'offsides' => 2, 'saves' => 3, 'big_chances' => 3], 'away' => ['possession' => 44, 'shots' => 9, 'shots_on_target' => 3, 'expected_goals' => 0.8, 'corners' => 4, 'fouls' => 12, 'offsides' => 1, 'saves' => 4, 'big_chances' => 1]],
+            'events' => $events, 'home_performance_rating' => 80, 'away_performance_rating' => 70,
+            'decisive_factors' => ['formation balance'], 'player_impacts' => [['user_id' => $match->home_user_id, 'player_id' => $homePlayer, 'impact' => 25, 'reason' => 'Created space between the lines.']],
+            'narrative' => 'A detailed fictional test match report with tactical adjustments, momentum changes, and decisive finishing.', 'display_narrative' => 'A tactical test match decided by better spacing and finishing.',
+        ];
+    }
+
+    public function test_v2_payload_contains_team_formation_coach_players_and_tactical_inputs(): void
+    {
+        [$league] = $this->leagueWithSquads();
+        $simulation = app(LeagueSimulationService::class)->prepare($league);
+        $payload = app(SimulationPromptBuilder::class)->payload($simulation);
+
+        $this->assertSame(SimulationPromptBuilder::VERSION, 'amadara-v2');
+        $this->assertCount(2, $payload['squads']);
+        $this->assertArrayHasKey('team_name', $payload['squads'][0]);
+        $this->assertArrayHasKey('formation', $payload['squads'][0]);
+        $this->assertNotEmpty($payload['squads'][0]['coach']);
+        $this->assertNotEmpty($payload['squads'][0]['players']);
+        $this->assertArrayHasKey('tactical_inputs', $payload['squads'][0]);
+        $this->assertStringContainsString('chemistry', app(SimulationPromptBuilder::class)->build($payload));
+        $this->assertStringContainsString('tactical_analysis', app(SimulationPromptBuilder::class)->build($payload));
+    }
+
     public function test_double_round_robin_simulation_publishes_results_and_local_points(): void
     {
         [$league, $home, $away] = $this->leagueWithSquads();
         $simulation = app(LeagueSimulationService::class)->prepare($league);
         $matches = $simulation->matches()->get();
-        $output = ['simulation_version' => 'amadara-v1', 'league_id' => $league->id, 'assumptions' => [], 'player_evaluations' => [], 'matches' => $matches->map(fn ($match) => [
-            'fixture_id' => $match->fixture_id, 'home_user_id' => $match->home_user_id, 'away_user_id' => $match->away_user_id,
-            'home_score' => $match->home_user_id === $home->id ? 2 : 0, 'away_score' => $match->home_user_id === $home->id ? 0 : 2,
-            'result' => $match->home_user_id === $home->id ? 'HOME_WIN' : 'AWAY_WIN', 'home_performance_rating' => 80, 'away_performance_rating' => 70,
-            'goal_scorers' => $match->home_user_id === $home->id ? [['user_id' => $home->id, 'player_id' => 1, 'minute' => 12], ['user_id' => $home->id, 'player_id' => 2, 'minute' => 67]] : [['user_id' => $home->id, 'player_id' => 1, 'minute' => 34], ['user_id' => $home->id, 'player_id' => 2, 'minute' => 81]],
-            'decisive_factors' => ['formation balance'], 'player_impacts' => [], 'narrative' => 'A fictional test match.',
-        ])->all(), 'standings_projection' => [['user_id' => $home->id], ['user_id' => $away->id]]];
+        $output = ['simulation_version' => 'amadara-v2', 'league_id' => $league->id, 'assumptions' => [], 'player_evaluations' => [], 'matches' => $matches->map(fn ($match) => $this->richMatch($match, $home, $away))->all(), 'standings_projection' => [['user_id' => $home->id], ['user_id' => $away->id]]];
         GeminiAi::shouldReceive('generateText')->once()->andReturn(json_encode($output));
 
         app(LeagueSimulationService::class)->run($simulation->fresh());

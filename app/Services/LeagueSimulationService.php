@@ -114,7 +114,7 @@ class LeagueSimulationService
                     'goal_scorers' => array_merge($homeScorers, $awayScorers),
                     'result' => $matchData['result'], 'home_points' => $homePoints, 'away_points' => $awayPoints,
                     'decisive_factors' => $matchData['decisive_factors'] ?? [], 'player_impacts' => $matchData['player_impacts'] ?? [],
-                    'narrative' => Str::limit((string) ($matchData['narrative'] ?? ''), 280, ''), 'raw_data' => $matchData,
+                    'narrative' => Str::limit((string) ($matchData['display_narrative'] ?? $matchData['narrative'] ?? ''), 280, ''), 'raw_data' => $matchData,
                 ]);
                 $this->recordStanding($standings[$home], $homeScore, $awayScore, $homeWin, ! $homeWin && ! $awayWin, $homePoints);
                 $this->recordStanding($standings[$away], $awayScore, $homeScore, $awayWin, ! $homeWin && ! $awayWin, $awayPoints);
