@@ -74,7 +74,7 @@
     @if ($ready)
       <div class="mt-6 rounded-2xl border border-uno-lime/30 bg-uno-lime/10 px-5 py-4 text-center text-sm font-bold text-uno-lime"><i class="bx bx-check-circle mr-1"></i> You are ready. Waiting for the other league players.</div>
     @else
-      <form method="POST" action="{{ route('leagues.ready', $league) }}" class="mt-6"><button type="submit" class="w-full rounded-2xl bg-uno-lime px-5 py-4 text-sm font-extrabold text-uno-navy transition hover:bg-white"><i class="bx bx-check-circle mr-1"></i> I’m ready</button></form>
+      <form method="POST" action="{{ route('leagues.ready', $league) }}" class="mt-6">@csrf<button type="submit" class="w-full rounded-2xl bg-uno-lime px-5 py-4 text-sm font-extrabold text-uno-navy transition hover:bg-white"><i class="bx bx-check-circle mr-1"></i> I’m ready</button></form>
     @endif
   @endif
 </main>
