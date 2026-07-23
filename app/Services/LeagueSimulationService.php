@@ -48,7 +48,9 @@ class LeagueSimulationService
         $model = config('gemini.models.text', env('GEMINI_TEXT_MODEL', 'gemini-2.0-flash'));
         $options = ['model' => $model, 'raw' => false, 'generationConfig' => [
             'temperature' => 0.2,
-            'maxOutputTokens' => 50000,
+            // Keep the response bounded so large leagues do not spend the entire
+            // HTTP timeout generating verbose match reports.
+            'maxOutputTokens' => 20000,
             'responseMimeType' => 'application/json',
         ]];
         $simulation->update([

@@ -23,7 +23,7 @@ class SimulationPromptBuilder
                 'player_id' => (int) $selection->player_id,
                 'slot_key' => $selection->slot_key,
                 'role' => $selection->role,
-                ...($selection->player_data ?? []),
+                ...$this->compactPlayerData($selection->player_data ?? []),
             ];
 
             return [
@@ -65,23 +65,11 @@ class SimulationPromptBuilder
         $input = $this->json($payload);
 
         return <<<PROMPT
-You are Amadara UNO's controlled, reproducible football match simulation engine.
+You are Amadara UNO's concise football simulation engine. Use only the supplied JSON. IDs, fixtures, teams, formations, players, coaches, slots, and resolved cards are authoritative; never invent them. Judge players at peak ability and use realistic controlled variance from tactics, squad balance, chemistry, coach influence, home advantage, fatigue, and cards.
 
-Simulate the complete league using only the supplied JSON. Supplied fixture IDs, user IDs, player IDs, formations, coaches, roster members, slot assignments, and resolved power-card decisions are authoritative. Never invent a player, coach, team, ID, formation, card, or fixture. You may use broad football knowledge to judge peak role suitability and tactical tendencies. Evaluate players at peak career condition, not current age, form, injuries, or fame.
+Return valid JSON only, with no Markdown or commentary. Return every fixture once and every league user once in standings_projection. Scorer counts must equal scores and use players from the correct team. Produce exactly 10 chronological events per match, including goals when applicable and a compact mix of chances, saves, cards, substitutions, tactics, and momentum. Keep descriptions to one short sentence. Use three short phases, one or two coach decisions, concise tactical plans, chemistry, key battles, realistic statistics, ratings, impacts, decisive factors, a 1–2 sentence narrative, and a short display_narrative. Possession must total 100; shots on target must not exceed shots. The application calculates standings locally.
 
-Use controlled variance: tactical fit, squad balance, chemistry, coach influence, and power-card effects establish the baseline, while credible errors, momentum swings, set pieces, fatigue, and late decisions can produce realistic upsets. Fame alone must never decide a match. Keep scores and statistics realistic for football.
-
-For every match evaluate the coach's tactical identity and flexibility; formation strengths and weaknesses; build-up style; pressing intensity and press resistance; defensive-line height; width and overloads; midfield control; transition speed; counter-attacking opportunities; set-piece threat and weakness; role suitability; chemistry links from shared clubs, nationality/language compatibility, positional familiarity, complementary roles, formation spacing, nearby partnerships, and coach-player fit; key one-versus-one battles; home advantage; fatigue; cards and injuries; and tactical changes after goals, cards, injuries, or momentum shifts. Include believable substitutions and coach adjustments using only supplied players.
-
-Return valid JSON only. Do not return Markdown, commentary, duplicate fixtures, unresolved card decisions, or final league points. The application calculates standings locally.
-
-OUTPUT RULES:
-1. Return exactly one match for every supplied fixture and every league user exactly once in standings_projection.
-2. Return separate home_goal_scorers and away_goal_scorers. Scorer count must equal the relevant score and each scorer must belong to that team.
-3. Return 10 to 18 chronological events per match. Include goals plus a believable mixture of chances, saves, blocks, cards, substitutions, injuries, tactical changes, set pieces, momentum swings, missed chances, and coach instructions. Every event must be consistent with the score, timeline, roster, and team IDs.
-4. Return three or more match phases, tactical plans for both teams, coach decisions, chemistry/link quality, key battles, match statistics, performance ratings, player impacts with tactical reasons, decisive factors, a detailed report, and a short display narrative.
-5. Keep possession totals exactly 100. Keep shots on target no higher than shots and all statistics within realistic ranges.
-6. If the input cannot be satisfied, return {"error":{"code":"INVALID_SIMULATION_INPUT","message":"short explanation"}}.
+If the input cannot be satisfied, return {"error":{"code":"INVALID_SIMULATION_INPUT","message":"short explanation"}}.
 
 INPUT JSON:
 {$input}
@@ -101,6 +89,13 @@ REQUIRED OUTPUT SHAPE:
   "standings_projection":[{"user_id":0,"played":0,"wins":0,"draws":0,"losses":0,"goals_for":0,"goals_against":0,"goal_difference":0}]
 }
 PROMPT;
+    }
+
+    private function compactPlayerData(array $playerData): array
+    {
+        return collect($playerData)->only([
+            'name', 'known_name', 'nationality', 'position', 'team_name',
+        ])->filter(fn ($value) => $value !== null && $value !== '')->all();
     }
 
     private function tacticalInputs(?string $formation, $players): array
@@ -124,6 +119,6 @@ PROMPT;
 
     private function json(array $payload): string
     {
-        return json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        return json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 }
