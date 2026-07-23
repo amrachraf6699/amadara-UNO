@@ -96,7 +96,9 @@ class SimulationResultValidator
                 if (! is_int($event['minute'] ?? null) || $event['minute'] < 1 || $event['minute'] > 120 || $event['minute'] < $lastMinute || ! in_array($event['type'] ?? null, self::EVENT_TYPES, true) || ! is_string($event['description'] ?? null) || trim($event['description']) === '') $errors[] = "Fixture {$fixtureId} has an invalid event.";
                 $lastMinute = (int) ($event['minute'] ?? $lastMinute);
                 if (! in_array($eventUser, [$homeUser, $awayUser], true)) $errors[] = "Fixture {$fixtureId} has an event from an invalid team.";
-                foreach ([$eventPlayer, $relatedPlayer] as $participant) if ($participant !== null && ! in_array((int) $participant, $playersByUser[$eventUser] ?? [], true)) $errors[] = "Fixture {$fixtureId} has an event with an invalid player.";
+                // The prompt schema uses 0 as the empty participant sentinel for
+                // events such as coach instructions. Treat it like null.
+                foreach ([$eventPlayer, $relatedPlayer] as $participant) if ($participant !== null && (int) $participant !== 0 && ! in_array((int) $participant, $playersByUser[$eventUser] ?? [], true)) $errors[] = "Fixture {$fixtureId} has an event with an invalid player.";
                 if (($event['type'] ?? null) === 'goal' && isset($eventGoals[$eventUser])) $eventGoals[$eventUser]++;
             }
             if (is_int($home) && is_int($away) && ($eventGoals[$homeUser] ?? -1) !== $home || is_int($home) && is_int($away) && ($eventGoals[$awayUser] ?? -1) !== $away) $errors[] = "Fixture {$fixtureId} goal events do not match the score.";
