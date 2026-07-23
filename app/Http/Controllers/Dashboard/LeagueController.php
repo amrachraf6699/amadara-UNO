@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class LeagueController extends Controller
 {
@@ -31,6 +32,11 @@ class LeagueController extends Controller
         $this->authorizeMember($request, $league);
         $league->load(['users', 'readyUsers', 'squads']);
         $simulation = $league->simulations()->where('status', LeagueSimulation::COMPLETED)->with(['standings.user', 'matches.homeUser', 'matches.awayUser'])->latest()->first();
+        $league->users->each(fn ($member) => $member->setAttribute('name', $member->pivot->team_name ?: $member->name));
+        $simulation?->standings->each(function ($standing) use ($league): void {
+            $member = $league->users->firstWhere('id', $standing->user_id);
+            if ($member) $standing->user->setAttribute('name', $member->name);
+        });
 
         return view('dashboard.league-table', compact('league', 'simulation'));
     }
@@ -41,10 +47,13 @@ class LeagueController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'max_users' => ['required', 'integer', 'min:2', 'max:20'],
             'icon' => ['required', Rule::in(League::ICONS)],
+            'team_name' => ['nullable', 'string', 'max:80'],
+            'team_logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        $league = League::create([...$validated, 'owner_id' => $request->user()->id]);
-        $league->users()->attach($request->user());
+        $team = $this->teamIdentity($request);
+        $league = League::create(collect($validated)->except(['team_name', 'team_logo'])->all() + ['owner_id' => $request->user()->id]);
+        $league->users()->attach($request->user(), $team);
         $league->loadCount(['users', 'readyUsers']);
         $message = "{$league->name} was created. Your league code is {$league->code}.";
 
@@ -59,6 +68,8 @@ class LeagueController extends Controller
     {
         $validated = $request->validate([
             'code' => ['required', 'string', 'size:5', 'alpha_num'],
+            'team_name' => ['nullable', 'string', 'max:80'],
+            'team_logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
         $code = strtoupper($validated['code']);
@@ -80,7 +91,7 @@ class LeagueController extends Controller
             throw ValidationException::withMessages(['code' => 'This league has reached its maximum number of users.']);
         }
 
-        $league->users()->attach($request->user());
+        $league->users()->attach($request->user(), $this->teamIdentity($request));
         $league->loadCount(['users', 'readyUsers']);
         $message = "You joined {$league->name}.";
 
@@ -141,5 +152,16 @@ class LeagueController extends Controller
     private function authorizeMember(Request $request, League $league): void
     {
         abort_unless($league->users()->whereKey($request->user()->id)->exists(), 403);
+    }
+
+    /** @return array{team_name: string, team_logo_path: ?string} */
+    private function teamIdentity(Request $request): array
+    {
+        $name = trim((string) $request->input('team_name', ''));
+
+        return [
+            'team_name' => $name !== '' ? $name : Str::limit($request->user()->name, 80, ''),
+            'team_logo_path' => $request->file('team_logo')?->store('team-logos', 'public'),
+        ];
     }
 }

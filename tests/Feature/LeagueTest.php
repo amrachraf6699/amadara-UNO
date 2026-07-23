@@ -7,6 +7,8 @@ use App\Models\League;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use App\Jobs\RunLeagueSimulation;
 use Tests\TestCase;
 
@@ -108,10 +110,14 @@ class LeagueTest extends TestCase
         $league = League::factory()->create(['max_users' => 2]);
         $league->users()->attach($captain);
 
-        $response = $this->actingAs($player)->post(route('leagues.join'), ['code' => strtolower($league->code)]);
+        Storage::fake('public');
+        $response = $this->actingAs($player)->post(route('leagues.join'), ['code' => strtolower($league->code), 'team_name' => 'UNO Stars', 'team_logo' => UploadedFile::fake()->image('logo.png')]);
 
         $response->assertRedirect(route('squads.show', $league));
         $this->assertDatabaseHas('league_user', ['league_id' => $league->id, 'user_id' => $player->id]);
+        $membership = $league->users()->whereKey($player->id)->firstOrFail()->pivot;
+        $this->assertSame('UNO Stars', $membership->team_name);
+        Storage::disk('public')->assertExists($membership->team_logo_path);
     }
 
     public function test_user_cannot_join_an_archived_or_full_league(): void

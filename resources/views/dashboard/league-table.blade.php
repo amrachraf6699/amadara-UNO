@@ -23,7 +23,7 @@
         <thead class="bg-white/5 text-xs uppercase tracking-widest text-white/40"><tr><th class="px-5 py-4">Player</th><th class="px-5 py-4">Status</th><th class="px-5 py-4">Formation</th><th class="px-5 py-4 text-right">Squad</th></tr></thead>
         <tbody class="divide-y divide-white/10">
           @foreach ($league->users as $member)
-            @php $memberSquad = $league->squads->firstWhere('user_id', $member->id); @endphp
+            @php $memberSquad = $league->squads->firstWhere('user_id', $member->id); $teamName = $member->pivot->team_name ?: $member->name; $teamLogo = $member->pivot->team_logo_path ? \Illuminate\Support\Facades\Storage::url($member->pivot->team_logo_path) : null; @endphp
             <tr class="hover:bg-white/[.03]"><td class="px-5 py-4 font-bold">{{ $member->name }} @if ($member->id === $league->owner_id)<span class="ml-2 rounded-full bg-uno-lime/15 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-uno-lime">Owner</span>@endif</td><td class="px-5 py-4">@if ($member->pivot->ready_at)<span class="text-uno-lime"><i class="bx bx-check-circle mr-1"></i> Ready</span>@else<span class="text-white/40"><i class="bx bx-time-five mr-1"></i> Not ready</span>@endif</td><td class="px-5 py-4 text-white/60">{{ $memberSquad?->formation ?: 'No formation yet' }}</td><td class="px-5 py-4 text-right">@if ($memberSquad)<a href="{{ route('leagues.members.squad', [$league, $member]) }}" class="font-extrabold text-uno-lime hover:text-white">View squad <i class="bx bx-right-arrow-alt"></i></a>@else<span class="text-white/30">—</span>@endif</td></tr>
           @endforeach
         </tbody>

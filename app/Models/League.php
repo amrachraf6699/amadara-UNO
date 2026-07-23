@@ -55,7 +55,7 @@ class League extends Model
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)->withPivot('ready_at')->withTimestamps();
+        return $this->belongsToMany(User::class)->withPivot('ready_at', 'team_name', 'team_logo_path')->withTimestamps();
     }
 
     public function readyUsers(): BelongsToMany

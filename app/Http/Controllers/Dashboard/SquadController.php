@@ -37,7 +37,7 @@ class SquadController extends Controller
         $membership = $league->users()->whereKey($request->user()->id)->firstOrFail();
         $opponents = $league->users->reject(fn ($user) => $user->id === $request->user()->id)->map(function ($user) use ($league) {
             $squad = $league->squads->firstWhere('user_id', $user->id);
-            return ['id' => $user->id, 'name' => $user->name, 'squad' => $squad ? $squad->selections->where('role', 'player')->map(fn ($selection) => ['id' => $selection->player_id, 'name' => $selection->player_data['known_name'] ?? $selection->player_data['name']])->values()->all() : []];
+            return ['id' => $user->id, 'name' => $user->pivot->team_name ?: $user->name, 'squad' => $squad ? $squad->selections->where('role', 'player')->map(fn ($selection) => ['id' => $selection->player_id, 'name' => $selection->player_data['known_name'] ?? $selection->player_data['name']])->values()->all() : []];
         })->values();
 
         return view('dashboard.squad-builder', [
@@ -57,6 +57,7 @@ class SquadController extends Controller
     {
         $this->authorizeMembership($request, $league);
         abort_unless($league->users()->whereKey($user->id)->exists(), 404);
+        $membership = $league->users()->whereKey($user->id)->firstOrFail();
         $squad = $user->squads()->where('league_id', $league->id)->with('selections')->firstOrFail();
         $this->useEffectiveSelections($league, $squad, $user->id);
 
@@ -65,9 +66,11 @@ class SquadController extends Controller
             'squad' => $squad,
             'formations' => self::FORMATIONS,
             'reservedIds' => collect(),
-            'ready' => (bool) $league->users()->whereKey($user->id)->first()->pivot->ready_at,
+            'ready' => (bool) $membership->pivot->ready_at,
             'editable' => false,
             'viewedUser' => $user,
+            'viewedTeamName' => $membership->pivot->team_name ?: $user->name,
+            'viewedTeamLogo' => $membership->pivot->team_logo_path ? \Illuminate\Support\Facades\Storage::url($membership->pivot->team_logo_path) : null,
         ]);
     }
 

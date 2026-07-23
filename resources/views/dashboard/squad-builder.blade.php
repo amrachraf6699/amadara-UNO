@@ -8,6 +8,8 @@
   $locked = $squad !== null;
   $editable = $editable ?? true;
   $viewedUser = $viewedUser ?? auth()->user();
+  $viewedTeamName = $viewedTeamName ?? ($viewedUser->id === auth()->id() ? ($league->users->firstWhere('id', $viewedUser->id)?->pivot->team_name ?: $viewedUser->name) : $viewedUser->name);
+  $viewedTeamLogo = $viewedTeamLogo ?? null;
   $submittedCards = $submittedCards ?? collect();
   $opponents = $opponents ?? collect();
   $saved = $squad?->selections->mapWithKeys(fn ($selection) => [$selection->slot_key => [
@@ -28,7 +30,7 @@
 <main class="mx-auto min-h-[calc(100vh-150px)] max-w-6xl px-5 py-10 lg:px-8 lg:py-14">
   <a href="{{ route('dashboard.index') }}" class="text-sm font-bold text-white/50 hover:text-uno-lime"><i class="bx bx-arrow-back mr-1"></i> Back to leagues</a>
   <div class="mt-6 flex flex-wrap items-end justify-between gap-5">
-    <div><p class="text-xs font-extrabold uppercase tracking-[.22em] text-uno-lime">{{ $league->name }}</p><h1 class="mt-2 text-4xl font-bold tracking-[-.04em]">{{ $locked ? ($viewedUser->id === auth()->id() ? 'Your locked squad.' : $viewedUser->name."'s squad.") : 'Build your squad.' }}</h1><p class="mt-3 text-sm text-white/50">{{ $locked ? 'This squad is final and cannot be edited.' : 'Pick 11 players and a coach. Every selection is exclusive within this league.' }}</p></div>
+    <div><p class="text-xs font-extrabold uppercase tracking-[.22em] text-uno-lime">{{ $league->name }}</p><h1 class="mt-2 flex items-center gap-3 text-4xl font-bold tracking-[-.04em]">@if ($locked && $viewedTeamLogo)<img src="{{ $viewedTeamLogo }}" alt="" class="h-12 w-12 rounded-xl object-cover">@endif{{ $locked ? ($viewedUser->id === auth()->id() ? 'Your locked squad.' : $viewedTeamName."'s squad.") : 'Build your squad.' }}</h1><p class="mt-3 text-sm text-white/50">{{ $locked ? 'This squad is final and cannot be edited.' : 'Pick 11 players and a coach. Every selection is exclusive within this league.' }}</p></div>
     @if ($locked)<span class="rounded-full bg-uno-lime px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-uno-navy"><i class="bx bx-lock-alt mr-1"></i> Locked {{ $squad->formation }}</span>@endif
   </div>
 
