@@ -209,7 +209,7 @@
                 <div class="mb-3 flex items-center justify-between gap-3"><p class="text-[10px] font-extrabold uppercase tracking-widest text-uno-lime">Goals timeline</p><span class="text-[10px] uppercase tracking-widest text-white/35">{{ $goalTimeline->count() }} goals</span></div>
                 @forelse ($goalTimeline as $goal)
                   @php $goalName = $playerName($goal['scorer']); @endphp
-                  <div class="goal-event {{ $goal['side'] === 'away' ? 'goal-event-away' : '' }}"><time>{{ $goal['scorer']['minute'] ?? '—' }}′</time><span class="goal-event-dot"></span><span class="team-avatar team-avatar-sm">@if ($goal['logo'])<img src="{{ $goal['logo'] }}" alt="" class="h-full w-full object-cover">@else<i class="bx bx-shield"></i>@endif</span><span class="min-w-0"><strong dir="auto" class="block truncate {{ $containsArabic($goalName) ? 'font-arabic' : '' }}">{{ $goalName }}</strong><small dir="auto" class="block truncate text-white/40 {{ $containsArabic($goal['team']) ? 'font-arabic' : '' }}">{{ $goal['team'] }}</small></span></div>
+                  <div class="goal-event {{ $goal['side'] === 'away' ? 'goal-event-away' : '' }}"><time>{{ $goal['scorer']['minute'] ?? '—' }}′</time><span class="goal-event-dot"></span><span class="team-avatar team-avatar-sm">@if ($goal['logo'])<img src="{{ $goal['logo'] }}" alt="" class="h-full w-full object-cover">@else<i class="bx bx-shield"></i>@endif</span><span class="min-w-0"><strong dir="auto" class="block truncate {{ $containsArabic($goalName) ? 'font-arabic' : '' }}">{{ $goalName }}</strong></span></div>
                 @empty
                   <p class="text-sm text-white/35">No goals.</p>
                 @endforelse
