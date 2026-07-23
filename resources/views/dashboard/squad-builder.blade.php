@@ -52,7 +52,6 @@
     <section id="powerCardDock" class="power-card-dock" aria-label="Power cards">
       <div class="power-card-dock-inner">
         <div class="flex min-w-0 items-center gap-3">
-          <span class="hidden text-xs font-extrabold uppercase tracking-[.2em] text-white/45 sm:block">Power cards</span>
           <div class="power-card-dock-list">
           @foreach ($powerCards as $type => $powerCard)
             @php $card = $submittedCards->get($type); @endphp

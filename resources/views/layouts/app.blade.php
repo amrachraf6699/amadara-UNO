@@ -230,7 +230,7 @@
       .hud-squad .grid-cols-2 { grid-template-columns: 1fr; }
       .hud-squad [data-power-card] select { min-width: 0; font-size: .7rem; }
       .hud-squad aside { width: 100%; }
-      .power-card-dock-inner { width: calc(100% - 1rem); padding: .45rem; border-radius: 18px; }
+      .power-card-dock-inner { padding: .45rem; border-radius: 18px; }
       .power-card-dock-list { width: 100%; justify-content: center; }
       .power-card-dock-card { min-width: 5.1rem; }
       .dashboard-table-wrap { border-radius: 12px; }
