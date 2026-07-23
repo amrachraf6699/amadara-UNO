@@ -20,10 +20,8 @@
       </div>
       @if(!$leagues->isEmpty())
         <button id="newLeagueButton" type="button" class="hud-action px-5 py-3 text-sm">
-          <i class="bx bx-plus mr-1 align-middle text-lg"></i> New league
+          <i class="bx bx-plus-circle mr-1 align-middle text-lg"></i> Create or join league
         </button>
-        <button type="button" data-show-join class="hud-secondary-action px-5 py-3 text-sm"><i
-            class="bx bx-log-in-circle mr-1 align-middle text-lg"></i> Join league</button>
       @endif
     </div>
 
