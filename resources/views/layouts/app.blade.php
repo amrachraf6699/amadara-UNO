@@ -44,13 +44,18 @@
     .form-loss { background: #e04a61; color: white; }
     .formation-row { --slot-count: 1; }
     @media (max-width: 639px) {
-      .formation-row { display: grid; grid-template-columns: repeat(var(--slot-count), minmax(0, 1fr)); gap: .5rem; }
-      .formation-slot { width: 100%; min-width: 0; padding: .55rem .4rem; }
-      #slots > div { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: .5rem; }
+      .formation-row { display: grid; grid-template-columns: repeat(var(--slot-count), minmax(0, 1fr)); gap: .35rem; }
+      .formation-row:not(:has(> :nth-child(2))) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .formation-row:not(:has(> :nth-child(2))) > :only-child { grid-column: 2; }
+      .formation-slot { width: 100%; min-width: 0; padding: .35rem .25rem; font-size: 9px; }
+      .formation-slot > div { width: 2rem; height: 2rem; }
+      #slots > div { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: .35rem; }
       #slots > div:has(> button:nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       #slots > div:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       #slots > div:has(> button:nth-child(4)) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-      #slots > div > button { width: 100%; min-width: 0; padding: .55rem .4rem; }
+      #slots > div:not(:has(> button:nth-child(2))) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      #slots > div:not(:has(> button:nth-child(2))) > :only-child { grid-column: 2; }
+      #slots > div > button { width: 100%; min-width: 0; padding: .35rem .25rem; font-size: 9px; }
     }
     .match-card { transition: transform .25s ease, border-color .25s ease, background .25s ease; }
     .match-card:hover { transform: translateY(-5px); border-color: rgba(125,237,25,.48); background: rgba(12,53,88,.9); }
