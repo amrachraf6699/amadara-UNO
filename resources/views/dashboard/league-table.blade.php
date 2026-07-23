@@ -188,7 +188,7 @@
           <div class="flex items-center justify-between gap-3"><button type="button" id="fixturePrevious"
               class="fixture-nav" aria-label="Previous fixture"><i class="bx bx-left-arrow-alt"></i><span
                 class="hidden sm:inline">Previous</span></button><span
-              class="text-[10px] font-extrabold uppercase tracking-[.2em] text-uno-lime">Matchday stories</span><button
+              id="fixtureLabel" class="text-[10px] font-extrabold uppercase tracking-[.2em] text-uno-lime">Fixture 1</span><button
               type="button" id="fixtureNext" class="fixture-nav" aria-label="Next fixture"><span
                 class="hidden sm:inline">Next</span><i class="bx bx-right-arrow-alt"></i></button></div>
           @foreach ($matches as $index => $match)
@@ -297,12 +297,12 @@
                       class="h-full w-full object-cover">@else<i class="bx bx-shield"></i>@endif</span><span dir="auto"
                       class="{{ $containsArabic($standingName) ? 'font-arabic' : '' }}">{{ $standingName }}</span></span>
                 </td>
-                <td>{{ $standing->played }}</td>
-                <td>{{ $standing->wins }}</td>
-                <td>{{ $standing->draws }}</td>
-                <td>{{ $standing->losses }}</td>
-                <td>{{ $standing->goal_difference }}</td>
-                <td class="font-extrabold text-uno-lime">{{ $standing->points }}</td>
+                <td data-label="Played">{{ $standing->played }}</td>
+                <td data-label="Won">{{ $standing->wins }}</td>
+                <td data-label="Drawn">{{ $standing->draws }}</td>
+                <td data-label="Lost">{{ $standing->losses }}</td>
+                <td data-label="Goal difference">{{ $standing->goal_difference }}</td>
+                <td data-label="Points" class="font-extrabold text-uno-lime">{{ $standing->points }}</td>
             </tr>@endforeach</tbody>
           </table>
         </div>
@@ -324,12 +324,12 @@
               </tr>
             </thead>
             <tbody>@foreach ($scorerTotals as $rank => $scorer)<tr>
-              <td class="font-bold text-white/40">{{ $rank + 1 }}</td>
-              <td class="font-bold"><span dir="auto"
+              <td data-label="Rank" class="font-bold text-white/40">{{ $rank + 1 }}</td>
+              <td data-label="Player" class="font-bold"><span dir="auto"
                   class="{{ $containsArabic($scorer['name']) ? 'font-arabic' : '' }}">{{ $scorer['name'] }}</span></td>
-              <td class="text-white/60"><span dir="auto"
+              <td data-label="Team" class="text-white/60"><span dir="auto"
                   class="{{ $containsArabic($scorer['team']) ? 'font-arabic' : '' }}">{{ $scorer['team'] }}</span></td>
-              <td class="text-right text-lg font-extrabold text-uno-lime">{{ $scorer['goals'] }}</td>
+              <td data-label="Goals" class="text-right text-lg font-extrabold text-uno-lime">{{ $scorer['goals'] }}</td>
             </tr>@endforeach</tbody>
           </table>
         </div>
@@ -359,9 +359,10 @@
       if (!cards.length) return;
       let current = 0;
       const counter = document.getElementById('fixtureCounter');
+      const label = document.getElementById('fixtureLabel');
       const previous = document.getElementById('fixturePrevious');
       const next = document.getElementById('fixtureNext');
-      const show = (index) => { current = (index + cards.length) % cards.length; cards.forEach((card, i) => card.classList.toggle('hidden', i !== current)); if (counter) counter.textContent = `${current + 1} / ${cards.length}`; previous.disabled = cards.length < 2; next.disabled = cards.length < 2; };
+      const show = (index) => { current = (index + cards.length) % cards.length; cards.forEach((card, i) => card.classList.toggle('hidden', i !== current)); if (counter) counter.textContent = `${current + 1} / ${cards.length}`; if (label) label.textContent = `Fixture ${current + 1}`; previous.disabled = cards.length < 2; next.disabled = cards.length < 2; };
       previous?.addEventListener('click', () => show(current - 1));
       next?.addEventListener('click', () => show(current + 1));
       document.addEventListener('keydown', (event) => { if (event.key === 'ArrowLeft') show(current - 1); if (event.key === 'ArrowRight') show(current + 1); });
