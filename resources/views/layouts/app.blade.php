@@ -178,26 +178,7 @@
       .hud-squad .grid-cols-2 { grid-template-columns: 1fr; }
       .hud-squad [data-power-card] select { min-width: 0; font-size: .7rem; }
       .hud-squad aside { width: 100%; }
-      .hud-results .results-table, .hud-results .results-table thead, .hud-results .results-table tbody, .hud-results .results-table tr, .hud-results .results-table th, .hud-results .results-table td { display: table-cell; width: auto; min-width: 0; }
-      .hud-results .results-table thead { display: table-header-group; }
-      .hud-results .results-table tbody { display: table-row-group; }
-      .hud-results .results-table tr { display: table-row; border: 0; padding: 0; background: transparent; }
-      .hud-results .results-table th, .hud-results .results-table td { display: table-cell; min-height: 0; padding: .75rem .85rem; }
-      .hud-results .results-table td::before { content: none; }
       .results-table-wrap { border-radius: 20px; }
-      .hud-results table.results-table { display: table; width: 100%; min-width: 0 !important; table-layout: fixed; }
-      .hud-results table.results-table th, .hud-results table.results-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: .7rem .45rem; font-size: .72rem; }
-      .hud-results table.results-table th { font-size: .58rem; letter-spacing: .08em; }
-      .hud-results table.results-table th:first-child, .hud-results table.results-table td:first-child { width: 9%; }
-      .hud-results table.results-table th:nth-child(2), .hud-results table.results-table td:nth-child(2) { width: 37%; }
-      .hud-results table.results-table th:nth-child(n+3), .hud-results table.results-table td:nth-child(n+3) { text-align: center; }
-      .hud-results table.standings-table th:nth-child(n+3), .hud-results table.standings-table td:nth-child(n+3) { width: 8%; }
-      .hud-results table.standings-table th:last-child, .hud-results table.standings-table td:last-child { width: 14%; }
-      .hud-results table.scorers-table th:nth-child(2), .hud-results table.scorers-table td:nth-child(2) { width: 43%; }
-      .hud-results table.scorers-table th:nth-child(3), .hud-results table.scorers-table td:nth-child(3) { width: 31%; }
-      .hud-results table.scorers-table th:last-child, .hud-results table.scorers-table td:last-child { width: 17%; }
-      .hud-results table.results-table .team-avatar-sm { width: 2rem; height: 2rem; }
-      .hud-results table.results-table td:nth-child(2) > span { max-width: 100%; }
       .hud-results table.results-table { display: block; width: 100%; min-width: 0 !important; table-layout: auto; border-spacing: 0; }
       .hud-results table.results-table thead { display: none; }
       .hud-results table.results-table tbody { display: grid; gap: .65rem; }
