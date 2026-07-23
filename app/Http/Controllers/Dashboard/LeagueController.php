@@ -30,12 +30,18 @@ class LeagueController extends Controller
     public function show(Request $request, League $league): View
     {
         $this->authorizeMember($request, $league);
-        $league->load(['users', 'readyUsers', 'squads']);
+        $league->load(['users', 'readyUsers', 'squads', 'effectiveSelections']);
         $simulation = $league->simulations()->where('status', LeagueSimulation::COMPLETED)->with(['standings.user', 'matches.homeUser', 'matches.awayUser'])->latest()->first();
         $league->users->each(fn ($member) => $member->setAttribute('name', $member->pivot->team_name ?: $member->name));
         $simulation?->standings->each(function ($standing) use ($league): void {
             $member = $league->users->firstWhere('id', $standing->user_id);
             if ($member) $standing->user->setAttribute('name', $member->name);
+        });
+        $simulation?->matches->each(function ($match) use ($league): void {
+            foreach (['homeUser', 'awayUser'] as $relation) {
+                $member = $league->users->firstWhere('id', $match->{$relation}->id);
+                if ($member) $match->{$relation}->setAttribute('name', $member->name);
+            }
         });
 
         return view('dashboard.league-table', compact('league', 'simulation'));

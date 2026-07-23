@@ -118,7 +118,7 @@ class LeagueSimulationService
             }
             foreach ($standings as $userId => $standing) $simulation->standings()->updateOrCreate(['user_id' => $userId], ['league_id' => $simulation->league_id, ...$standing]);
             $simulation->update(['status' => LeagueSimulation::COMPLETED, 'normalized_response' => $result, 'completed_at' => now()]);
-            $simulation->league()->update(['status' => League::STATUS_RUNNING]);
+            $simulation->league()->update(['status' => League::STATUS_FINISHED]);
         });
     }
 
