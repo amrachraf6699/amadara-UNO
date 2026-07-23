@@ -50,7 +50,7 @@ class LeagueSimulationService
             'temperature' => 0.2,
             // Keep the response bounded so large leagues do not spend the entire
             // HTTP timeout generating verbose match reports.
-            'maxOutputTokens' => 20000,
+            'maxOutputTokens' => 12000,
             'responseMimeType' => 'application/json',
         ]];
         $simulation->update([
