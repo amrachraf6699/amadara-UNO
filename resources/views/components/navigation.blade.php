@@ -7,11 +7,14 @@
 
     @auth
       <div class="flex items-center gap-3">
+        <a href="{{ route('dashboard.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-extrabold text-white transition hover:-translate-y-0.5 hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy">
+          <i class="bx bx-grid-alt text-lg"></i><span>Dashboard</span>
+        </a>
         <span class="hidden text-sm font-bold text-white/70 sm:block">Hi, {{ auth()->user()->name }}</span>
         <form method="POST" action="{{ route('logout') }}">
           @csrf
-          <button type="submit" class="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-extrabold text-white transition hover:-translate-y-0.5 hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy">
-            Log out <i class="bx bx-log-out align-middle text-lg"></i>
+          <button type="submit" aria-label="Log out" title="Log out" class="grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/5 text-white transition hover:-translate-y-0.5 hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy">
+            <i class="bx bx-log-out text-xl"></i>
           </button>
         </form>
       </div>
