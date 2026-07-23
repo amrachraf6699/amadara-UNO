@@ -52,10 +52,19 @@ class GeminiAiService extends PackageGeminiAiService
 
             $this->validateResponse($response);
             $data = $response->json();
+            $text = $this->extractTextContent($data);
+
+            if (config('gemini.log_response', false)) {
+                Log::info('Gemini text response body', [
+                    'model' => $model,
+                    'response_body' => $response->body(),
+                    'extracted_text_chars' => strlen($text),
+                ]);
+            }
 
             return ($options['raw'] ?? false)
                 ? $data
-                : $this->extractTextContent($data);
+                : $text;
         } catch (\Throwable $exception) {
             Log::error('Gemini text request failed', $requestContext + [
                 'elapsed_ms' => (int) round((microtime(true) - $startedAt) * 1000),

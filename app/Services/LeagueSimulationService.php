@@ -8,6 +8,7 @@ use App\Models\League;
 use App\Models\LeaguePowerCard;
 use App\Models\LeagueSimulation;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -65,7 +66,20 @@ class LeagueSimulationService
             $simulation->update(['raw_response' => is_string($raw) ? $raw : json_encode($raw, JSON_THROW_ON_ERROR)]);
             $decoded = $this->decode($raw);
             $errors = $this->validator->validate($decoded, $payload);
-            if ($errors) throw new InvalidSimulationResult($errors);
+            if ($errors) {
+                Log::warning('Gemini simulation response failed validation', [
+                    'simulation_id' => $simulation->id,
+                    'response_chars' => strlen((string) $raw),
+                    'error_count' => count($errors),
+                    'errors' => $errors,
+                ]);
+                throw new InvalidSimulationResult($errors);
+            }
+            Log::info('Gemini simulation response parsed successfully', [
+                'simulation_id' => $simulation->id,
+                'response_chars' => strlen((string) $raw),
+                'match_count' => count($decoded['matches'] ?? []),
+            ]);
             $this->publish($simulation, $decoded);
         } catch (Throwable $exception) {
             $errors = $exception instanceof InvalidSimulationResult ? $exception->errors : [$exception->getMessage()];
@@ -90,9 +104,24 @@ class LeagueSimulationService
     private function decode(mixed $raw): array
     {
         $text = is_array($raw) ? json_encode($raw, JSON_THROW_ON_ERROR) : trim((string) $raw);
-        $text = preg_replace('/^```(?:json)?\s*|\s*```$/i', '', $text);
+        $text = preg_replace('/^\xEF\xBB\xBF/', '', $text);
+        $text = trim(preg_replace('/^```(?:json)?\s*|\s*```$/i', '', $text));
         $result = json_decode($text, true);
-        if (! is_array($result)) throw new InvalidSimulationResult(['Response was not valid JSON.']);
+        if (! is_array($result)) {
+            $start = strpos($text, '{');
+            $end = strrpos($text, '}');
+            if ($start !== false && $end !== false && $end > $start) {
+                $result = json_decode(substr($text, $start, $end - $start + 1), true);
+            }
+        }
+        if (! is_array($result)) {
+            Log::warning('Gemini response JSON parsing failed', [
+                'response_chars' => strlen($text),
+                'response_hash' => hash('sha256', $text),
+                'json_error' => json_last_error_msg(),
+            ]);
+            throw new InvalidSimulationResult(['Response was not valid JSON.']);
+        }
         return $result;
     }
 
