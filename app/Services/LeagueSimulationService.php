@@ -158,8 +158,10 @@ class LeagueSimulationService
                 $homeScore = (int) $matchData['home_score']; $awayScore = (int) $matchData['away_score'];
                 $homeWin = $matchData['result'] === 'HOME_WIN'; $awayWin = $matchData['result'] === 'AWAY_WIN';
                 $boostedHome = (int) $match->boost_user_id === $home;
-                $homePoints = $homeWin ? ($boostedHome ? 4 : 3) : ($awayWin && $boostedHome ? -1 : 0);
-                $awayPoints = $awayWin ? 3 : 0;
+                // A boost changes only the user's home-game points. The opponent
+                // always receives standard football points for the result.
+                $homePoints = $homeWin ? ($boostedHome ? 4 : 3) : ($awayWin ? ($boostedHome ? -1 : 0) : ($boostedHome ? 0 : 1));
+                $awayPoints = $awayWin ? 3 : (! $homeWin && ! $awayWin ? 1 : 0);
                 $homeScorers = $matchData['home_goal_scorers'] ?? collect($matchData['goal_scorers'] ?? [])->filter(fn ($scorer) => (int) ($scorer['user_id'] ?? 0) === $home)->values()->all();
                 $awayScorers = $matchData['away_goal_scorers'] ?? collect($matchData['goal_scorers'] ?? [])->filter(fn ($scorer) => (int) ($scorer['user_id'] ?? 0) === $away)->values()->all();
                 $match->update([
