@@ -303,9 +303,25 @@
             </thead>
             <tbody>@foreach ($scorerTotals as $rank => $scorer) @php $scorerMember = $league->users->firstWhere('id', $scorer['user_id']); $scorerLogo = $teamLogo($scorerMember); @endphp<tr>
               <td data-label="Rank" class="font-bold text-white/40">{{ $rank + 1 }}</td>
-              <td data-label="Player" class="font-bold"><span class="inline-flex items-center gap-3"><span class="team-avatar team-avatar-sm shrink-0">@if ($scorerLogo)<img src="{{ $scorerLogo }}" alt="" class="h-full w-full object-cover">@else<i class="bx bx-shield"></i>@endif</span><span dir="auto" class="{{ $containsArabic($scorer['name']) ? 'font-arabic' : '' }}">{{ $scorer['name'] }}</span></span></td>
-              <td data-label="Team" class="text-white/60"><span dir="auto"
-                  class="{{ $containsArabic($scorer['team']) ? 'font-arabic' : '' }}">{{ $scorer['team'] }}</span></td>
+              <td data-label="Player" class="font-bold">
+                <span dir="auto" class="{{ $containsArabic($scorer['team']) ? 'font-arabic' : '' }}">
+                  {{ $scorer['name'] }}
+                </span>
+              </td>
+              <td data-label="Team" class="text-white/60">
+                <span class="inline-flex items-center gap-3">
+                  <span class="team-avatar team-avatar-sm shrink-0">
+                    @if ($scorerLogo)
+                      <img src="{{ $scorerLogo }}" alt="" class="h-full w-full object-cover">
+                    @else
+                      <i class="bx bx-shield"></i>
+                    @endif
+                  </span>
+                  <span dir="auto" class="{{ $containsArabic($scorer['name']) ? 'font-arabic' : '' }}">
+                    {{ $scorer['team'] }}
+                  </span>
+                </span>
+              </td>
               <td data-label="Goals" class="text-right text-lg font-extrabold text-uno-lime">{{ $scorer['goals'] }}</td>
             </tr>@endforeach</tbody>
           </table>

@@ -65,6 +65,23 @@
           @endforeach
         </div>
       </section>
+      <section class="leagues-mobile-table mt-10" aria-label="Your leagues table">
+        <div class="dashboard-table-wrap">
+          <table class="dashboard-leagues-table w-full text-left text-sm">
+            <thead><tr><th>League</th><th>Status</th><th>Players</th><th>Ready</th><th aria-label="Open"></th></tr></thead>
+            <tbody>@foreach ($leagues as $league)
+              @php $readyPercent = $league->users_count ? round(($league->ready_users_count / $league->users_count) * 100) : 0; @endphp
+              <tr data-league-row data-league-url="{{ route('leagues.show', $league) }}" tabindex="0" role="link">
+                <td><span class="dashboard-league-name"><span class="hud-icon-frame dashboard-league-icon"><i class="{{ $league->icon }}"></i></span><span class="min-w-0"><strong class="block truncate">{{ $league->name }}</strong><small class="mt-1 block tracking-[.2em] text-uno-lime">{{ $league->code }}</small></span></span></td>
+                <td><span class="hud-status" data-status="{{ $league->status }}">{{ $statusLabels[$league->status] ?? str_replace('_', ' ', ucfirst($league->status)) }}</span></td>
+                <td>{{ $league->users_count }} / {{ $league->max_users }}</td>
+                <td><span class="text-uno-lime">{{ $league->ready_users_count }} / {{ $league->users_count }}</span><div class="hud-meter dashboard-ready-meter"><span style="width: {{ $readyPercent }}%"></span></div></td>
+                <td class="text-right"><i class="bx bx-right-arrow-alt dashboard-row-arrow" aria-hidden="true"></i></td>
+              </tr>
+            @endforeach</tbody>
+          </table>
+        </div>
+      </section>
     @endif
   </main>
 
@@ -202,6 +219,12 @@
     selectIcon(iconInput.value || defaultIcon);
 
     const spinner = '<svg class="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3"></circle><path class="opacity-90" fill="currentColor" d="M21 12a9 9 0 0 1-9 9v-3a6 6 0 0 0 6-6h3Z"></path></svg>';
+    document.querySelectorAll('[data-league-row]').forEach((row) => {
+      const open = () => { window.location.href = row.dataset.leagueUrl; };
+      row.addEventListener('click', open);
+      row.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } });
+    });
+
     const setLoading = (button, loading) => {
       if (loading) { button.dataset.originalContent = button.innerHTML; button.disabled = true; button.classList.add('cursor-wait', 'opacity-70'); button.innerHTML = spinner; }
       else { button.disabled = false; button.classList.remove('cursor-wait', 'opacity-70'); button.innerHTML = button.dataset.originalContent; }
