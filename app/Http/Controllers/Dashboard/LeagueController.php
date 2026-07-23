@@ -15,7 +15,7 @@ class LeagueController extends Controller
 {
     public function index(Request $request): View
     {
-        $leagues = $request->user()->leagues()->withCount('users')->with('squads')->latest('leagues.created_at')->get();
+        $leagues = $request->user()->leagues()->withCount(['users', 'readyUsers'])->with('squads')->latest('leagues.created_at')->get();
 
         return view('dashboard.index', [
             'leagues' => $leagues,
@@ -29,13 +29,11 @@ class LeagueController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'max_users' => ['required', 'integer', 'min:2', 'max:20'],
             'icon' => ['required', Rule::in(League::ICONS)],
-            'start_at' => ['required', 'date', 'after:'.now()->addMinutes(5)->toDateTimeString()],
-            'end_at' => ['required', 'date', 'after:start_at'],
         ]);
 
-        $league = League::create($validated);
+        $league = League::create([...$validated, 'owner_id' => $request->user()->id]);
         $league->users()->attach($request->user());
-        $league->loadCount('users');
+        $league->loadCount(['users', 'readyUsers']);
         $message = "{$league->name} was created. Your league code is {$league->code}.";
 
         if ($request->expectsJson()) {
@@ -58,8 +56,8 @@ class LeagueController extends Controller
             throw ValidationException::withMessages(['code' => 'No league was found with that code.']);
         }
 
-        if ($league->status === League::STATUS_ARCHIVED) {
-            throw ValidationException::withMessages(['code' => 'This league is archived and cannot be joined.']);
+        if ($league->status !== League::STATUS_YET_TO_START) {
+            throw ValidationException::withMessages(['code' => 'This league is no longer accepting players.']);
         }
 
         if ($league->users()->whereKey($request->user()->id)->exists()) {
@@ -71,7 +69,7 @@ class LeagueController extends Controller
         }
 
         $league->users()->attach($request->user());
-        $league->loadCount('users');
+        $league->loadCount(['users', 'readyUsers']);
         $message = "You joined {$league->name}.";
 
         if ($request->expectsJson()) {
@@ -79,6 +77,30 @@ class LeagueController extends Controller
         }
 
         return redirect()->route('squads.show', $league)->with('status', $message);
+    }
+
+    public function ready(Request $request, League $league): RedirectResponse
+    {
+        $this->authorizeMember($request, $league);
+        if ($league->status !== League::STATUS_YET_TO_START) throw ValidationException::withMessages(['league' => 'This league is no longer waiting for players.']);
+        if (! $request->user()->squads()->where('league_id', $league->id)->exists()) throw ValidationException::withMessages(['squad' => 'Lock your squad before marking yourself ready.']);
+
+        $league->users()->updateExistingPivot($request->user()->id, ['ready_at' => now()]);
+        return redirect()->route('squads.show', $league)->with('status', 'You are ready for the league.');
+    }
+
+    public function start(Request $request, League $league): RedirectResponse
+    {
+        $this->authorizeMember($request, $league);
+        if ((int) $league->owner_id !== (int) $request->user()->id) throw ValidationException::withMessages(['league' => 'Only the league owner can start it.']);
+        if ($league->status !== League::STATUS_YET_TO_START) throw ValidationException::withMessages(['league' => 'This league has already started.']);
+
+        $members = $league->users()->count();
+        $ready = $league->readyUsers()->count();
+        if ($members === 0 || $members !== $ready) throw ValidationException::withMessages(['league' => 'Every league player must be ready before the league can start.']);
+
+        $league->update(['status' => League::STATUS_RUNNING]);
+        return redirect()->route('dashboard.index')->with('status', "{$league->name} has started.");
     }
 
     /**
@@ -93,9 +115,14 @@ class LeagueController extends Controller
             'max_users' => $league->max_users,
             'icon' => $league->icon,
             'status' => $league->status,
-            'start_at' => $league->start_at->toIso8601String(),
-            'end_at' => $league->end_at->toIso8601String(),
+            'owner_id' => $league->owner_id,
             'users_count' => $league->users_count,
+            'ready_users_count' => $league->ready_users_count ?? $league->readyUsers()->count(),
         ];
+    }
+
+    private function authorizeMember(Request $request, League $league): void
+    {
+        abort_unless($league->users()->whereKey($request->user()->id)->exists(), 403);
     }
 }

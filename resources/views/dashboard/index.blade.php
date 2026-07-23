@@ -7,7 +7,7 @@
   @php
     $statusLabels = [
       'archived' => 'Archived',
-      'yet_to_start' => 'Yet to start',
+      'yet_to_start' => 'Waiting for players',
       'running' => 'Running',
       'finished' => 'Finished',
     ];
@@ -20,9 +20,11 @@
         <h1 class="mt-3 text-4xl font-bold tracking-[-.04em] sm:text-6xl">Your leagues<span class="text-uno-lime">.</span></h1>
         <p class="mt-4 max-w-xl text-sm leading-7 text-white/55 sm:text-base">Keep your competitions close, invite your squad, and get ready for the next matchday.</p>
       </div>
+      @if(!$leagues->isEmpty())
       <button id="newLeagueButton" type="button" class="rounded-xl bg-uno-lime px-5 py-3 text-sm font-extrabold text-uno-navy transition hover:-translate-y-0.5 hover:bg-white">
         <i class="bx bx-plus mr-1 align-middle text-lg"></i> New league
       </button>
+      @endif
     </div>
 
     @if ($leagues->isEmpty())
@@ -30,7 +32,7 @@
         <div class="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-uno-blue/20 text-4xl text-uno-lime"><i class="bx bx-trophy"></i></div>
         <h2 class="mt-6 text-2xl font-bold">Your next competition starts here.</h2>
         <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-white/50">Create a league for your squad or join an existing competition with its five-character code.</p>
-        <button type="button" data-open-new-league class="mt-7 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy">Open league options</button>
+        <button type="button" data-open-new-league class="mt-7 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy">New League</button>
       </section>
     @else
       <section id="leaguesGrid" class="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3" aria-label="Your participating leagues">
@@ -45,11 +47,8 @@
               <span class="text-white/45">League code</span>
               <strong class="tracking-[.25em] text-uno-lime">{{ $league->code }}</strong>
             </div>
-            <dl class="mt-5 grid grid-cols-2 gap-4 text-sm">
-              <div><dt class="text-xs uppercase tracking-widest text-white/35">Starts</dt><dd class="mt-1 font-bold">{{ $league->start_at->format('M j, Y') }}</dd></div>
-              <div><dt class="text-xs uppercase tracking-widest text-white/35">Ends</dt><dd class="mt-1 font-bold">{{ $league->end_at->format('M j, Y') }}</dd></div>
-            </dl>
-            <div class="mt-6 flex items-center justify-between text-xs text-white/45"><span><i class="bx bx-group mr-1"></i>{{ $league->users_count }} / {{ $league->max_users }} users</span><a href="{{ route('squads.show', $league) }}" class="font-bold text-uno-lime hover:text-white">{{ $league->squads->isNotEmpty() ? 'View locked squad' : 'Build squad' }} <i class="bx bx-right-arrow-alt"></i></a></div>
+            <div class="mt-5 flex items-center justify-between border-y border-white/10 py-4 text-sm"><span class="text-white/45">Ready players</span><strong class="text-uno-lime">{{ $league->ready_users_count }} / {{ $league->users_count }}</strong></div>
+            <div class="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-white/45"><a href="{{ route('squads.show', $league) }}" class="font-bold text-uno-lime hover:text-white">{{ $league->squads->isNotEmpty() ? 'View squad' : 'Build squad' }} <i class="bx bx-right-arrow-alt"></i></a>@if ($league->owner_id === auth()->id() && $league->status === \App\Models\League::STATUS_YET_TO_START && $league->ready_users_count === $league->users_count && $league->users_count > 0)<form method="POST" action="{{ route('leagues.start', $league) }}">@csrf<button type="submit" class="rounded-xl bg-uno-lime px-3 py-2 font-extrabold text-uno-navy hover:bg-white">Start league</button></form>@endif</div>
           </article>
         @endforeach
       </section>
@@ -71,7 +70,6 @@
         <div><label for="league-name" class="mb-2 block text-sm font-bold">League name</label><input id="league-name" name="name" value="{{ old('name') }}" required class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime" placeholder="e.g. Friday Night League"></div>
         <div><span class="mb-2 block text-sm font-bold">Choose an icon</span><input id="league-icon" type="hidden" name="icon" value="{{ old('icon', $leagueIcons[0]) }}"><div class="icon-picker flex max-w-full gap-2 overflow-x-auto pb-2">@foreach ($leagueIcons as $icon)<button type="button" data-icon="{{ $icon }}" class="icon-option grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-2xl text-white/60 transition hover:border-uno-lime/60 hover:text-uno-lime" aria-label="Choose {{ $icon }}"><i class="{{ $icon }}"></i></button>@endforeach</div></div>
         <div><label for="max-users" class="mb-2 block text-sm font-bold">Maximum users</label><input id="max-users" name="max_users" type="number" min="2" max="10000" value="{{ old('max_users', 10) }}" required class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime"></div>
-        <div class="grid gap-4 sm:grid-cols-2"><div><label for="start-at" class="mb-2 block text-sm font-bold">Start date</label><input id="start-at" name="start_at" type="datetime-local" value="{{ old('start_at') }}" required class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime"></div><div><label for="end-at" class="mb-2 block text-sm font-bold">End date</label><input id="end-at" name="end_at" type="datetime-local" value="{{ old('end_at') }}" required class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime"></div></div>
         <div class="flex flex-col-reverse gap-3 border-t border-white/10 pt-4 sm:flex-row sm:justify-end sm:pt-5"><button type="button" data-close-modal class="w-full rounded-xl border border-white/15 px-5 py-3 text-sm font-bold text-white/70 hover:bg-white/10 sm:w-auto">Cancel</button><button type="submit" class="inline-flex w-full items-center justify-center rounded-xl bg-uno-lime px-5 py-3 text-sm font-extrabold text-uno-navy hover:bg-white sm:w-auto">Create league <i class="bx bx-right-arrow-alt align-middle text-lg"></i></button></div>
       </form>
     </div>
@@ -108,12 +106,6 @@
     iconOptions.forEach((option) => option.addEventListener('click', () => selectIcon(option.dataset.icon)));
     selectIcon(iconInput.value || defaultIcon);
 
-    const startInput = document.getElementById('start-at');
-    const endInput = document.getElementById('end-at');
-    const toLocalInputValue = (date) => { const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0, 16); };
-    startInput.min = toLocalInputValue(new Date(Date.now() + 5 * 60 * 1000));
-    startInput.addEventListener('change', () => { endInput.min = startInput.value; });
-
     const spinner = '<svg class="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3"></circle><path class="opacity-90" fill="currentColor" d="M21 12a9 9 0 0 1-9 9v-3a6 6 0 0 0 6-6h3Z"></path></svg>';
     const setLoading = (button, loading) => {
       if (loading) { button.dataset.originalContent = button.innerHTML; button.disabled = true; button.classList.add('cursor-wait', 'opacity-70'); button.innerHTML = spinner; }
@@ -121,9 +113,7 @@
     };
     const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[character]);
     const statusLabels = { archived: 'Archived', yet_to_start: 'Yet to start', running: 'Running', finished: 'Finished' };
-    const formatDate = (value) => new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value));
-    const formatTime = (value) => new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(new Date(value));
-    const leagueCard = (league) => `<article class="match-card glass-panel rounded-[28px] p-6"><div class="flex items-start justify-between gap-4"><span class="grid h-14 w-14 place-items-center rounded-2xl bg-uno-blue/20 text-3xl text-uno-lime"><i class="${escapeHtml(league.icon)}"></i></span><span class="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white/65">${escapeHtml(statusLabels[league.status] || league.status)}</span></div><h2 class="mt-6 truncate text-2xl font-bold" title="${escapeHtml(league.name)}">${escapeHtml(league.name)}</h2><div class="mt-6 flex items-center justify-between border-y border-white/10 py-4 text-sm"><span class="text-white/45">League code</span><strong class="tracking-[.25em] text-uno-lime">${escapeHtml(league.code)}</strong></div><dl class="mt-5 grid grid-cols-2 gap-4 text-sm"><div><dt class="text-xs uppercase tracking-widest text-white/35">Starts</dt><dd class="mt-1 font-bold">${formatDate(league.start_at)}</dd></div><div><dt class="text-xs uppercase tracking-widest text-white/35">Ends</dt><dd class="mt-1 font-bold">${formatDate(league.end_at)}</dd></div></dl><div class="mt-6 flex items-center justify-between text-xs text-white/45"><span><i class="bx bx-group mr-1"></i>${league.users_count} / ${league.max_users} users</span><span>${formatTime(league.start_at)}</span></div></article>`;
+    const leagueCard = (league) => `<article class="match-card glass-panel rounded-[28px] p-6"><div class="flex items-start justify-between gap-4"><span class="grid h-14 w-14 place-items-center rounded-2xl bg-uno-blue/20 text-3xl text-uno-lime"><i class="${escapeHtml(league.icon)}"></i></span><span class="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white/65">${escapeHtml(statusLabels[league.status] || league.status)}</span></div><h2 class="mt-6 truncate text-2xl font-bold" title="${escapeHtml(league.name)}">${escapeHtml(league.name)}</h2><div class="mt-6 flex items-center justify-between border-y border-white/10 py-4 text-sm"><span class="text-white/45">League code</span><strong class="tracking-[.25em] text-uno-lime">${escapeHtml(league.code)}</strong></div><div class="mt-5 flex items-center justify-between text-sm"><span class="text-white/45">Ready players</span><strong class="text-uno-lime">${league.ready_users_count} / ${league.users_count}</strong></div><div class="mt-6 flex items-center justify-between text-xs text-white/45"><span><i class="bx bx-group mr-1"></i>${league.users_count} / ${league.max_users} users</span><a href="/leagues/${league.id}/squad" class="font-bold text-uno-lime hover:text-white">Build squad <i class="bx bx-right-arrow-alt"></i></a></div></article>`;
     const appendLeague = (league) => { let grid = document.getElementById('leaguesGrid'); if (!grid) { document.getElementById('emptyLeaguesState')?.remove(); grid = document.createElement('section'); grid.id = 'leaguesGrid'; grid.className = 'mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3'; grid.setAttribute('aria-label', 'Your participating leagues'); document.querySelector('main').appendChild(grid); } grid.insertAdjacentHTML('afterbegin', leagueCard(league)); };
 
     const submitLeagueForm = async (form) => {
@@ -136,7 +126,7 @@
         if (payload.redirect_url) { window.location.href = payload.redirect_url; return; }
         appendLeague(payload.league);
         form.reset();
-        if (form.id === 'createLeagueForm') { selectIcon(defaultIcon); endInput.min = ''; startInput.min = toLocalInputValue(new Date(Date.now() + 5 * 60 * 1000)); }
+        if (form.id === 'createLeagueForm') selectIcon(defaultIcon);
         closeModals();
         window.showToast?.(payload.message || 'League updated.');
       } catch (error) {

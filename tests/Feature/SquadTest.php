@@ -44,6 +44,15 @@ class SquadTest extends TestCase
         $this->actingAs($user)->get(route('squads.show', $league))->assertOk()->assertSee('Your locked squad.')->assertSee('Locked 4-3-3')->assertSee('Marc-André ter Stegen');
     }
 
+    public function test_player_can_mark_their_locked_squad_ready(): void
+    {
+        $user = User::factory()->create(); $league = League::factory()->create(['owner_id' => $user->id]); $league->users()->attach($user);
+        $this->actingAs($user)->postJson(route('squads.store', $league), $this->payload())->assertOk();
+        $this->actingAs($user)->post(route('leagues.ready', $league))->assertRedirect(route('squads.show', $league));
+        $this->assertDatabaseHas('league_user', ['league_id' => $league->id, 'user_id' => $user->id]);
+        $this->assertNotNull($league->users()->whereKey($user->id)->first()->pivot->ready_at);
+    }
+
     public function test_a_player_cannot_be_reserved_twice_in_one_league(): void
     {
         $first = User::factory()->create(); $second = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach([$first->id, $second->id]);

@@ -18,8 +18,6 @@ class LeagueFactory extends Factory
             'name' => fake()->unique()->company().' League',
             'max_users' => 10,
             'icon' => fake()->randomElement(League::ICONS),
-            'start_at' => now()->addDays(7),
-            'end_at' => now()->addDays(35),
             'status' => League::STATUS_YET_TO_START,
         ];
     }

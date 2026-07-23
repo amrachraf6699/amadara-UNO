@@ -31,12 +31,14 @@ class SquadController extends Controller
     {
         $this->authorizeMembership($request, $league);
         $squad = $request->user()->squads()->where('league_id', $league->id)->with('selections')->first();
+        $membership = $league->users()->whereKey($request->user()->id)->firstOrFail();
 
         return view('dashboard.squad-builder', [
             'league' => $league,
             'squad' => $squad,
             'formations' => self::FORMATIONS,
             'reservedIds' => $league->selections()->pluck('player_id')->values(),
+            'ready' => (bool) $membership->pivot->ready_at,
         ]);
     }
 
@@ -64,8 +66,8 @@ class SquadController extends Controller
     public function store(Request $request, League $league, TeamsCatalog $catalog): JsonResponse
     {
         $this->authorizeMembership($request, $league);
-        if ($league->status === League::STATUS_ARCHIVED) {
-            throw ValidationException::withMessages(['squad' => 'This league is archived.']);
+        if ($league->status !== League::STATUS_YET_TO_START) {
+            throw ValidationException::withMessages(['squad' => 'This league is no longer accepting squad changes.']);
         }
 
         $validated = $request->validate([

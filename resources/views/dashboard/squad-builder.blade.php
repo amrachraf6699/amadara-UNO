@@ -68,7 +68,15 @@
     </div>
     <aside class="glass-panel rounded-3xl p-5 sm:p-6"><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Coach</p>@if ($locked) @php $coach = $squad->selections->firstWhere('role', 'coach')?->player; @endphp @if ($coach)<div class="mt-5 rounded-2xl border border-white/15 bg-white/5 p-3 text-center"><div class="mx-auto grid h-14 w-14 place-items-center overflow-hidden rounded-full bg-uno-blue/30 text-uno-lime">@if ($coach->image_url)<img src="{{ $coach->image_url }}" alt="{{ $coach->known_name ?: $coach->name }}" class="h-full w-full object-cover">@else<i class="bx bx-user text-xl"></i>@endif</div><strong class="mt-2 block truncate text-sm text-uno-lime">{{ $coach->known_name ?: $coach->name }}</strong><span class="mt-1 inline-block rounded-full bg-uno-lime/15 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-uno-lime">Coach</span><small class="mt-1 block truncate text-[10px] text-white/45">{{ collect([$coach->nationality, $coach->age ? $coach->age.' yrs' : null, $coach->height_cm ? $coach->height_cm.' cm' : null])->filter()->join(' · ') }}</small></div>@endif @else<p class="mt-2 text-sm text-white/45">Choose your coach from the same football data catalogue.</p><button type="button" data-slot="coach" class="slot-button mt-5 flex min-h-24 w-full items-center justify-center rounded-2xl border border-dashed border-white/25 bg-white/5 p-3 text-center text-sm font-bold text-white/55 hover:border-uno-lime hover:text-uno-lime">+ Select coach</button>@endif</aside>
   </section>
-  @if (!$locked)<button id="saveSquad" type="button" disabled class="mt-6 w-full rounded-2xl bg-uno-lime px-5 py-4 text-sm font-extrabold text-uno-navy opacity-40 transition hover:bg-white">Save and lock squad</button>@endif
+  @if (!$locked)
+    <button id="saveSquad" type="button" disabled class="mt-6 w-full rounded-2xl bg-uno-lime px-5 py-4 text-sm font-extrabold text-uno-navy opacity-40 transition hover:bg-white">Save and lock squad</button>
+  @elseif ($league->status === \App\Models\League::STATUS_YET_TO_START)
+    @if ($ready)
+      <div class="mt-6 rounded-2xl border border-uno-lime/30 bg-uno-lime/10 px-5 py-4 text-center text-sm font-bold text-uno-lime"><i class="bx bx-check-circle mr-1"></i> You are ready. Waiting for the other league players.</div>
+    @else
+      <form method="POST" action="{{ route('leagues.ready', $league) }}" class="mt-6"><button type="submit" class="w-full rounded-2xl bg-uno-lime px-5 py-4 text-sm font-extrabold text-uno-navy transition hover:bg-white"><i class="bx bx-check-circle mr-1"></i> I’m ready</button></form>
+    @endif
+  @endif
 </main>
 
 @if (!$locked)

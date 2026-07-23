@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -40,14 +41,8 @@ class League extends Model
         'name',
         'max_users',
         'icon',
-        'start_at',
-        'end_at',
+        'owner_id',
         'status',
-    ];
-
-    protected $casts = [
-        'start_at' => 'datetime',
-        'end_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -60,7 +55,17 @@ class League extends Model
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)->withTimestamps();
+        return $this->belongsToMany(User::class)->withPivot('ready_at')->withTimestamps();
+    }
+
+    public function readyUsers(): BelongsToMany
+    {
+        return $this->users()->wherePivotNotNull('ready_at');
+    }
+
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
     public function squads(): HasMany

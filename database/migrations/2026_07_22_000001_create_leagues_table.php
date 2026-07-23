@@ -14,8 +14,7 @@ return new class extends Migration
             $table->string('code', 5)->unique();
             $table->unsignedInteger('max_users');
             $table->string('icon')->default('bx bx-football');
-            $table->dateTime('start_at');
-            $table->dateTime('end_at');
+            $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('status', 30)->default('yet_to_start');
             $table->timestamps();
         });

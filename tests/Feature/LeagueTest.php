@@ -48,9 +48,6 @@ class LeagueTest extends TestCase
             'name' => 'Friday Night League',
             'max_users' => 12,
             'icon' => 'bx bx-trophy',
-            'start_at' => '2026-08-01 18:00',
-            'end_at' => '2026-09-01 22:00',
-            'status' => League::STATUS_YET_TO_START,
         ]);
 
         $response->assertRedirect(route('squads.show', $league = League::firstOrFail()));
@@ -58,23 +55,21 @@ class LeagueTest extends TestCase
         $league ??= League::firstOrFail();
         $this->assertMatchesRegularExpression('/^[A-Z0-9]{5}$/', $league->code);
         $this->assertDatabaseHas('league_user', ['league_id' => $league->id, 'user_id' => $user->id]);
+        $this->assertSame($user->id, $league->owner_id);
     }
 
-    public function test_create_rejects_a_start_time_within_five_minutes(): void
+    public function test_create_does_not_require_dates(): void
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->from(route('dashboard.index'))->post(route('leagues.store'), [
+        $response = $this->actingAs($user)->post(route('leagues.store'), [
             'name' => 'Too Soon League',
             'max_users' => 10,
             'icon' => 'bx bx-football',
-            'start_at' => now()->addMinutes(4)->format('Y-m-d H:i:s'),
-            'end_at' => now()->addDay()->format('Y-m-d H:i:s'),
         ]);
 
-        $response->assertRedirect(route('dashboard.index'));
-        $response->assertSessionHasErrors('start_at');
-        $this->assertDatabaseCount('leagues', 0);
+        $response->assertRedirect();
+        $this->assertDatabaseHas('leagues', ['name' => 'Too Soon League']);
     }
 
     public function test_create_and_join_return_json_for_ajax_requests(): void
@@ -87,8 +82,6 @@ class LeagueTest extends TestCase
             'name' => 'Ajax League',
             'max_users' => 10,
             'icon' => 'bx bx-star',
-            'start_at' => now()->addMinutes(10)->format('Y-m-d H:i:s'),
-            'end_at' => now()->addDay()->format('Y-m-d H:i:s'),
         ]);
 
         $createResponse->assertCreated()->assertJsonPath('league.name', 'Ajax League');
@@ -125,5 +118,21 @@ class LeagueTest extends TestCase
         $this->actingAs($player)->from(route('dashboard.index'))->post(route('leagues.join'), ['code' => $full->code])->assertSessionHasErrors('code');
         $this->assertDatabaseMissing('league_user', ['league_id' => $archived->id, 'user_id' => $player->id]);
         $this->assertDatabaseMissing('league_user', ['league_id' => $full->id, 'user_id' => $player->id]);
+    }
+
+    public function test_only_ready_members_allow_the_owner_to_start_the_league(): void
+    {
+        $owner = User::factory()->create(); $player = User::factory()->create();
+        $league = League::factory()->create(['owner_id' => $owner->id]);
+        $league->users()->attach([$owner->id, $player->id]);
+
+        $this->actingAs($owner)->post(route('leagues.start', $league))->assertSessionHasErrors('league');
+        $league->users()->updateExistingPivot($owner->id, ['ready_at' => now()]);
+        $this->actingAs($owner)->post(route('leagues.start', $league))->assertSessionHasErrors('league');
+        $league->users()->updateExistingPivot($player->id, ['ready_at' => now()]);
+        $this->actingAs($player)->post(route('leagues.start', $league))->assertSessionHasErrors('league');
+
+        $this->actingAs($owner)->post(route('leagues.start', $league))->assertRedirect(route('dashboard.index'));
+        $this->assertDatabaseHas('leagues', ['id' => $league->id, 'status' => League::STATUS_RUNNING]);
     }
 }

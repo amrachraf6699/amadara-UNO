@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('league_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->timestamp('ready_at')->nullable();
             $table->timestamps();
             $table->unique(['league_id', 'user_id']);
         });
