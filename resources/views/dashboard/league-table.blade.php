@@ -28,17 +28,16 @@
 
 @section('content')
   <main data-dashboard-page="league-table" class="hud-results mx-auto min-h-[calc(100vh-150px)] max-w-7xl px-4 py-8 lg:px-8 lg:py-14">
-    <a href="{{ route('dashboard.index') }}" class="text-sm font-bold text-white/50 hover:text-uno-lime"><i
-        class="bx bx-arrow-back mr-1"></i> Back to leagues</a>
+    <a href="{{ route('dashboard.index') }}" class="league-back-link"><span class="league-back-icon"><i
+        class="bx bx-arrow-back"></i></span> Back to leagues</a>
     <div class="mt-6 flex flex-wrap items-end justify-between gap-5">
       <div>
         <h1 class="mt-2 text-4xl font-bold tracking-[-.04em] font-extrabold uppercase text-uno-lime">{{ $league->name }}</h1>
       </div>
-      <div class="flex flex-wrap items-center gap-3"><button type="button" data-copy-value="{{ $league->code }}" data-copy-label="League code" class="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-extrabold text-white/70 transition hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy" title="Copy league code"><i class="bx bx-clipboard text-lg"></i><span class="hidden sm:inline">{{ $league->code }}</span></button><button type="button" data-copy-value="{{ route('dashboard.index', ['join' => $league->code]) }}" data-copy-label="Invitation link" class="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-extrabold text-white/70 transition hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy" title="Copy invitation link" aria-label="Copy invitation link"><i class="bx bx-user-plus text-lg"></i><span class="hidden sm:inline">Invite</span></button><span
-          class="rounded-full bg-white/10 px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-white/70">{{ $simulationInProgress ? 'Simulation in progress' : ucfirst(str_replace('_', ' ', $league->status)) }}</span>@if (!$simulation && $league->owner_id === auth()->id() && $league->status === \App\Models\League::STATUS_YET_TO_START && !$simulationInProgress && $league->readyUsers->count() === $league->users->count() && $league->users->isNotEmpty())
+      <div class="league-header-actions"><div class="league-copy-actions"><button type="button" data-copy-value="{{ $league->code }}" data-copy-label="League code" class="league-icon-action" title="Copy league code"><span class="league-icon-action-glyph"><i class="bx bx-clipboard"></i></span><span class="league-icon-action-label">Code</span></button><button type="button" data-copy-value="{{ route('dashboard.index', ['join' => $league->code]) }}" data-copy-label="Invitation link" class="league-icon-action" title="Copy invitation link" aria-label="Copy invitation link"><span class="league-icon-action-glyph"><i class="bx bx-user-plus"></i></span><span class="league-icon-action-label">Invite</span></button></div><span
+          class="league-status-pill">{{ $simulationInProgress ? 'Simulation in progress' : ucfirst(str_replace('_', ' ', $league->status)) }}</span>@if (!$simulation && $league->owner_id === auth()->id() && $league->status === \App\Models\League::STATUS_YET_TO_START && !$simulationInProgress && $league->readyUsers->count() === $league->users->count() && $league->users->isNotEmpty())
             <form method="POST" action="{{ route('leagues.start', $league) }}">@csrf<button type="submit"
-                class="rounded-xl bg-uno-lime px-4 py-2 text-xs font-extrabold text-uno-navy hover:bg-white">Start
-          league</button></form>@endif
+                class="league-start-action"><i class="bx bx-play-circle"></i><span>Start league</span></button></form>@endif
       </div>
     </div>
 
@@ -48,8 +47,8 @@
           <p class="hud-kicker">Squads ready</p>
           <div class="mt-2 flex items-end justify-between"><strong
               class="hud-number text-3xl font-black text-uno-lime">{{ $league->readyUsers->count() }}<span
-                class="text-lg text-white/35"> / {{ $league->users->count() }}</span></strong><i
-              class="bx bx-check-shield text-2xl text-uno-lime/60"></i></div>
+                class="text-lg text-white/35"> / {{ $league->users->count() }}</span></strong><span class="lobby-ready-icon"><i
+              class="bx bx-check-shield"></i></span></div>
           <div class="hud-meter mt-3"><span
               style="width: {{ $league->users->count() ? ($league->readyUsers->count() / $league->users->count()) * 100 : 0 }}%"></span>
           </div>
