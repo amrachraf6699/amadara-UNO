@@ -40,30 +40,28 @@
       </section>
     @else
       <section id="leaguesGrid" class="mt-10" aria-label="Your participating leagues">
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div class="leagues-list grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           @foreach ($leagues as $league)
             @php $readyPercent = $league->users_count ? round(($league->ready_users_count / $league->users_count) * 100) : 0; @endphp
-            <article class="hud-league-card group relative overflow-hidden p-5 sm:p-6">
-              <div class="flex items-start justify-between gap-4"><span class="hud-icon-frame h-14 w-14 text-3xl"><i
+            <a href="{{ route('leagues.show', $league) }}" class="hud-league-card league-row group relative overflow-hidden p-5 sm:p-6">
+              <span class="league-row-icon hud-icon-frame h-14 w-14 text-3xl"><i
                     class="{{ $league->icon }}"></i></span><span class="hud-status"
                   data-status="{{ $league->status }}">{{ $statusLabels[$league->status] ?? str_replace('_', ' ', ucfirst($league->status)) }}</span>
-              </div>
-              <div class="mt-6">
+              <div class="league-row-main min-w-0">
                 <h3 class="truncate text-2xl font-black text-white">{{ $league->name }}</h3>
                 <div class="mt-2 flex items-center gap-2 text-xs text-white/40"><i class="bx bx-key text-uno-lime"></i><span
                     class="tracking-[.25em] text-uno-lime">{{ $league->code }}</span><span>•</span><span>{{ $league->users_count }}
                     / {{ $league->max_users }} players</span></div>
               </div>
-              <div class="mt-6">
+              <div class="league-row-progress mt-6">
                 <div class="flex items-center justify-between text-xs font-bold"><span class="text-white/45">Ready
                     squads</span><span class="text-uno-lime">{{ $league->ready_users_count }} /
                     {{ $league->users_count }}</span></div>
                 <div class="hud-meter mt-2"><span style="width: {{ $readyPercent }}%"></span></div>
               </div>
-              <a href="{{ route('leagues.show', $league) }}"
-                class="hud-card-action mt-6 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[.04] px-4 py-3 text-sm font-extrabold text-white transition group-hover:border-uno-lime/35 group-hover:bg-uno-lime group-hover:text-uno-navy"><span>{{ $league->status === 'yet_to_start' ? 'Open lobby' : 'Open results' }}</span><i
-                  class="bx bx-right-arrow-alt text-xl"></i></a>
-            </article>
+              <span class="hud-card-action league-row-action mt-6 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[.04] px-4 py-3 text-sm font-extrabold text-white transition group-hover:border-uno-lime/35 group-hover:bg-uno-lime group-hover:text-uno-navy"><span>{{ $league->status === 'yet_to_start' ? 'Open lobby' : 'Open results' }}</span><i
+                  class="bx bx-right-arrow-alt text-xl"></i></span>
+            </a>
           @endforeach
         </div>
       </section>

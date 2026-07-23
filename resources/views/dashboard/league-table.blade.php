@@ -54,15 +54,6 @@
               style="width: {{ $league->users->count() ? ($league->readyUsers->count() / $league->users->count()) * 100 : 0 }}%"></span>
           </div>
         </div>
-        <div class="hud-panel p-4">
-          <p class="hud-kicker">Match format</p><strong class="mt-2 block text-2xl font-black text-white">Double RR</strong>
-          <p class="mt-1 text-xs text-white/40">Home and away fixtures</p>
-        </div>
-        <div class="hud-panel p-4">
-          <p class="hud-kicker">Squad state</p><strong
-            class="mt-2 block text-2xl font-black text-white">{{ $league->squads->count() }} locked</strong>
-          <p class="mt-1 text-xs text-white/40">Tactical formations</p>
-        </div>
       </section>
       <nav class="mt-8 flex gap-2 border-b border-white/10" aria-label="League sections"><a
           href="{{ route('leagues.show', $league) }}"
@@ -191,7 +182,8 @@
               $awayName = $match->awayUser->name;
               $homeScorers = $matchScorers($match, 'home');
               $awayScorers = $matchScorers($match, 'away');
-            $events = is_array($match->raw_data['events'] ?? null) ? $match->raw_data['events'] : []; @endphp
+            $events = is_array($match->raw_data['events'] ?? null) ? $match->raw_data['events'] : [];
+            $goalTimeline = collect($homeScorers)->map(fn($scorer) => ['scorer' => $scorer, 'team' => $homeName, 'logo' => $teamLogo($homeMember), 'side' => 'home'])->merge(collect($awayScorers)->map(fn($scorer) => ['scorer' => $scorer, 'team' => $awayName, 'logo' => $teamLogo($awayMember), 'side' => 'away']))->sortBy(fn($goal) => (int) ($goal['scorer']['minute'] ?? 999))->values(); @endphp
             <div data-fixture-card class="{{ $index === 0 ? '' : 'hidden' }} pt-5" data-fixture-index="{{ $index }}">
               <div class="flex items-center justify-center gap-3 text-center sm:gap-8">
                 <div class="min-w-0 flex-1"><span class="team-avatar team-avatar-md mx-auto">@if ($teamLogo($homeMember))<img
@@ -213,21 +205,14 @@
               <details class="match-details mt-6 rounded-2xl border border-white/10 bg-black/10">
                 <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-xs font-extrabold uppercase tracking-widest text-white/60"><span><i class="bx bx-list-ul mr-1 text-uno-lime"></i> Match details</span><i class="bx bx-chevron-down text-lg text-uno-lime transition"></i></summary>
                 <div class="border-t border-white/10 p-3">
-              <div class="grid gap-3 sm:grid-cols-2">
-                <div class="rounded-2xl border border-white/10 bg-black/15 p-3">
-                  <p class="text-[10px] font-extrabold uppercase tracking-widest text-uno-lime">{{ $homeName }} scorers</p>
-                  @forelse ($homeScorers as $scorer)<div class="mt-2 flex items-center justify-between gap-2 text-sm"><span
-                    class="truncate {{ $containsArabic($playerName($scorer)) ? 'font-arabic' : '' }}">{{ $playerName($scorer) }}</span><small
-                  class="text-white/40">{{ $scorer['minute'] ?? '—' }}′</small></div>@empty<p
-                      class="mt-2 text-xs text-white/35">No goals.</p>@endforelse
-                </div>
-                <div class="rounded-2xl border border-white/10 bg-black/15 p-3">
-                  <p class="text-[10px] font-extrabold uppercase tracking-widest text-uno-lime">{{ $awayName }} scorers</p>
-                  @forelse ($awayScorers as $scorer)<div class="mt-2 flex items-center justify-between gap-2 text-sm"><span
-                    class="truncate {{ $containsArabic($playerName($scorer)) ? 'font-arabic' : '' }}">{{ $playerName($scorer) }}</span><small
-                  class="text-white/40">{{ $scorer['minute'] ?? '—' }}′</small></div>@empty<p
-                      class="mt-2 text-xs text-white/35">No goals.</p>@endforelse
-                </div>
+              <div class="goal-timeline rounded-2xl border border-white/10 bg-black/15 p-4">
+                <div class="mb-3 flex items-center justify-between gap-3"><p class="text-[10px] font-extrabold uppercase tracking-widest text-uno-lime">Goals timeline</p><span class="text-[10px] uppercase tracking-widest text-white/35">{{ $goalTimeline->count() }} goals</span></div>
+                @forelse ($goalTimeline as $goal)
+                  @php $goalName = $playerName($goal['scorer']); @endphp
+                  <div class="goal-event {{ $goal['side'] === 'away' ? 'goal-event-away' : '' }}"><time>{{ $goal['scorer']['minute'] ?? '—' }}′</time><span class="goal-event-dot"></span><span class="team-avatar team-avatar-sm">@if ($goal['logo'])<img src="{{ $goal['logo'] }}" alt="" class="h-full w-full object-cover">@else<i class="bx bx-shield"></i>@endif</span><span class="min-w-0"><strong dir="auto" class="block truncate {{ $containsArabic($goalName) ? 'font-arabic' : '' }}">{{ $goalName }}</strong><small dir="auto" class="block truncate text-white/40 {{ $containsArabic($goal['team']) ? 'font-arabic' : '' }}">{{ $goal['team'] }}</small></span></div>
+                @empty
+                  <p class="text-sm text-white/35">No goals.</p>
+                @endforelse
               </div>
               <div class="mt-3 rounded-2xl border border-white/10 bg-black/15 p-4">
                 <div class="flex items-center justify-between gap-3">
