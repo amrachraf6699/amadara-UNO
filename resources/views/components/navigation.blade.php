@@ -7,7 +7,7 @@
 
     @auth
       <div class="flex items-center gap-2 sm:gap-3">
-        <a href="{{ route('dashboard.index') }}" @class(['inline-flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-extrabold transition sm:px-4 sm:text-sm', 'border border-uno-lime/30 bg-uno-lime/10 text-uno-lime' => request()->routeIs('dashboard.index'), 'border-white/15 bg-white/5 text-white' => ! request()->routeIs('dashboard.index'), 'hover:-translate-y-0.5 hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy']) aria-current="{{ request()->routeIs('dashboard.index') ? 'page' : 'false' }}">
+        <a href="{{ route('dashboard.index') }}" data-spa-link @class(['inline-flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-extrabold transition sm:px-4 sm:text-sm', 'border border-uno-lime/30 bg-uno-lime/10 text-uno-lime' => request()->routeIs('dashboard.index', 'leagues.*', 'squads.*', 'cards.*'), 'border-white/15 bg-white/5 text-white' => ! request()->routeIs('dashboard.index', 'leagues.*', 'squads.*', 'cards.*'), 'hover:-translate-y-0.5 hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy']) aria-current="{{ request()->routeIs('dashboard.index', 'leagues.*', 'squads.*', 'cards.*') ? 'page' : 'false' }}">
           <i class="bx bx-football text-lg"></i><span>Dashboard</span>
         </a>
         <span class="hidden border-l border-white/10 pl-3 text-xs font-bold text-white/60 sm:block">{{ auth()->user()->name }}</span>

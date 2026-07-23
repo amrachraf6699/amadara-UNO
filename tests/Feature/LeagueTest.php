@@ -50,6 +50,21 @@ class LeagueTest extends TestCase
         $response->assertDontSee('Other League');
     }
 
+    public function test_dashboard_pages_return_spa_fragments_without_the_app_shell(): void
+    {
+        $user = User::factory()->create();
+        $league = League::factory()->create(['name' => 'SPA League']);
+        $user->leagues()->attach($league);
+
+        $response = $this->actingAs($user)->withHeaders(['X-SPA-Request' => '1'])->get(route('dashboard.index'));
+
+        $response->assertOk();
+        $response->assertSee('data-spa-fragment', false);
+        $response->assertSee('data-dashboard-page="dashboard-index"', false);
+        $response->assertDontSee('<header', false);
+        $response->assertDontSee('<footer', false);
+    }
+
     public function test_user_can_create_a_league_and_is_added_as_a_member(): void
     {
         $user = User::factory()->create();
@@ -144,12 +159,13 @@ class LeagueTest extends TestCase
 
         $this->actingAs($owner)->post(route('leagues.start', $league))->assertSessionHasErrors('league');
         $league->users()->updateExistingPivot($owner->id, ['ready_at' => now()]);
+        $this->actingAs($owner)->postJson(route('leagues.ready', $league))->assertOk()->assertJsonPath('redirect_url', route('squads.show', $league));
         $this->actingAs($owner)->post(route('leagues.start', $league))->assertSessionHasErrors('league');
         $league->users()->updateExistingPivot($player->id, ['ready_at' => now()]);
         $this->actingAs($player)->post(route('leagues.start', $league))->assertSessionHasErrors('league');
 
         Queue::fake();
-        $this->actingAs($owner)->post(route('leagues.start', $league))->assertRedirect(route('leagues.show', $league));
+        $this->actingAs($owner)->postJson(route('leagues.start', $league))->assertOk()->assertJsonPath('redirect_url', route('leagues.show', $league));
         Queue::assertPushed(RunLeagueSimulation::class);
         $this->assertDatabaseHas('league_simulations', ['league_id' => $league->id, 'status' => 'pending']);
         $this->actingAs($owner)->getJson(route('leagues.simulation.status', $league))->assertOk()->assertJsonPath('status', 'pending')->assertJsonPath('completed', false);

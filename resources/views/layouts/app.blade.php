@@ -1,3 +1,8 @@
+@if (request()->header('X-SPA-Request') === '1')
+  <div data-spa-fragment data-spa-content data-page-title="@yield('title', 'Amadara UNO | Football League')">
+    @yield('content')
+  </div>
+@else
 <!doctype html>
 <html lang="en">
 <head>
@@ -12,6 +17,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  @if (! app()->runningUnitTests())
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+  @endif
 
   <script>
     tailwind.config = {
@@ -34,6 +43,13 @@
     html { scroll-behavior: smooth; }
     body { font-family: "Space Grotesk", sans-serif; background: #031323; color: #f7fbff; }
     .hud-results { box-sizing: border-box; width: 100%; padding-inline: 1rem; }
+    [data-spa-content] { position: relative; }
+    [data-spa-progress] { position: fixed; top: 0; left: 0; z-index: 100; width: 0; height: 3px; background: #7dec19; box-shadow: 0 0 18px rgba(125,237,25,.8); opacity: 0; pointer-events: none; transition: width .25s ease, opacity .2s ease; }
+    [data-spa-progress].is-loading { width: 72%; opacity: 1; }
+    .spa-skeleton { min-height: 55vh; padding: 2rem 1rem; }
+    .spa-skeleton-block { border: 1px solid rgba(255,255,255,.1); border-radius: 1.25rem; background: linear-gradient(110deg, rgba(255,255,255,.04) 25%, rgba(255,255,255,.1) 37%, rgba(255,255,255,.04) 63%); background-size: 400% 100%; animation: spa-shimmer 1.4s ease infinite; }
+    @keyframes spa-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+    @media (prefers-reduced-motion: reduce) { [data-spa-progress], .spa-skeleton-block { animation: none; transition: none; } }
     @media (min-width: 1024px) { .hud-results { padding-inline: 2rem; } }
     .font-arabic { font-family: "Tajawal", sans-serif; }
     [dir="auto"] { unicode-bidi: plaintext; }
@@ -240,9 +256,12 @@
     <x-toast.success />
     <x-toast.error />
 
-    @yield('content')
+    <div data-spa-content data-page-title="@yield('title', 'Amadara UNO | Football League')">
+      @yield('content')
+    </div>
 
     <x-footer />
   </div>
 </body>
 </html>
+@endif

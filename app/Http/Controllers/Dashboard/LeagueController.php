@@ -139,17 +139,20 @@ class LeagueController extends Controller
         return redirect()->route('squads.show', $league)->with('status', $message);
     }
 
-    public function ready(Request $request, League $league): RedirectResponse
+    public function ready(Request $request, League $league): RedirectResponse|JsonResponse
     {
         $this->authorizeMember($request, $league);
         if ($league->status !== League::STATUS_YET_TO_START) throw ValidationException::withMessages(['league' => 'This league is no longer waiting for players.']);
         if (! $request->user()->squads()->where('league_id', $league->id)->exists()) throw ValidationException::withMessages(['squad' => 'Lock your squad before marking yourself ready.']);
 
         $league->users()->updateExistingPivot($request->user()->id, ['ready_at' => now()]);
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'You are ready for the league.', 'redirect_url' => route('squads.show', $league)]);
+        }
         return redirect()->route('squads.show', $league)->with('status', 'You are ready for the league.');
     }
 
-    public function start(Request $request, League $league, LeagueSimulationService $simulationService): RedirectResponse
+    public function start(Request $request, League $league, LeagueSimulationService $simulationService): RedirectResponse|JsonResponse
     {
         $this->authorizeMember($request, $league);
         if ((int) $league->owner_id !== (int) $request->user()->id) throw ValidationException::withMessages(['league' => 'Only the league owner can start it.']);
@@ -165,6 +168,9 @@ class LeagueController extends Controller
 
         $simulation = $simulationService->prepare($league);
         RunLeagueSimulation::dispatch($simulation->id);
+        if ($request->expectsJson()) {
+            return response()->json(['message' => "{$league->name} is being simulated.", 'redirect_url' => route('leagues.show', $league)]);
+        }
         return redirect()->route('leagues.show', $league)->with('status', "{$league->name} is being simulated.");
     }
 

@@ -27,7 +27,7 @@
 @endphp
 
 @section('content')
-  <main class="hud-results mx-auto min-h-[calc(100vh-150px)] max-w-7xl px-4 py-8 lg:px-8 lg:py-14">
+  <main data-dashboard-page="league-table" class="hud-results mx-auto min-h-[calc(100vh-150px)] max-w-7xl px-4 py-8 lg:px-8 lg:py-14">
     <a href="{{ route('dashboard.index') }}" class="text-sm font-bold text-white/50 hover:text-uno-lime"><i
         class="bx bx-arrow-back mr-1"></i> Back to leagues</a>
     <div class="mt-6 flex flex-wrap items-end justify-between gap-5">
@@ -97,7 +97,7 @@
       <div class="mt-8 rounded-2xl border border-sky-300/20 bg-sky-300/10 px-5 py-4 text-sm text-sky-100"><i
           class="bx bx-loader-alt mr-2 animate-spin"></i> The league simulation is running. This page will update
         automatically when results are ready.</div>
-      <script>(() => { const endpoint = @json(route('leagues.simulation.status', $league)); const resultsUrl = @json(route('leagues.show', $league)); let checking = false; const check = async () => { if (checking) return; checking = true; try { const response = await fetch(`${endpoint}?_=${Date.now()}`, { headers: { Accept: 'application/json' }, cache: 'no-store' }); const data = await response.json(); if (data.completed || data.failed) window.location.assign(resultsUrl); } catch (error) { } finally { checking = false; } }; check(); window.setInterval(check, 3000); })();</script>
+      <script>(() => { const endpoint = @json(route('leagues.simulation.status', $league)); const resultsUrl = @json(route('leagues.show', $league)); let checking = false; const check = async () => { if (checking) return; checking = true; try { const response = await fetch(`${endpoint}?_=${Date.now()}`, { headers: { Accept: 'application/json' }, cache: 'no-store' }); const data = await response.json(); if (data.completed || data.failed) { if (window.DashboardSPA) window.DashboardSPA.navigate(resultsUrl, { replace: true }); else window.location.assign(resultsUrl); } } catch (error) { } finally { checking = false; } }; check(); const timer = window.setInterval(check, 3000); window.__dashboardSpaCleanup = () => window.clearInterval(timer); })();</script>
     @else
       <section class="mt-8">
         <div class="flex items-end justify-between gap-4">
@@ -348,7 +348,6 @@
       }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script>
     (() => {
       const cards = [...document.querySelectorAll('[data-fixture-card]')];

@@ -13,7 +13,7 @@
     ];
   @endphp
 
-  <main class="mx-auto min-h-[calc(100vh-150px)] max-w-7xl px-4 py-8 lg:px-8 lg:py-14">
+  <main data-dashboard-page="dashboard-index" class="mx-auto min-h-[calc(100vh-150px)] max-w-7xl px-4 py-8 lg:px-8 lg:py-14">
     <div class="flex flex-wrap items-end justify-between gap-6">
       <div>
         <h1 class="hud-title mt-3 text-4xl font-black sm:text-6xl">Your leagues<span class="text-uno-lime">.</span></h1>
@@ -209,7 +209,7 @@
 
     const spinner = '<svg class="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3"></circle><path class="opacity-90" fill="currentColor" d="M21 12a9 9 0 0 1-9 9v-3a6 6 0 0 0 6-6h3Z"></path></svg>';
     document.querySelectorAll('[data-league-row]').forEach((row) => {
-      const open = () => { window.location.href = row.dataset.leagueUrl; };
+      const open = () => { if (window.DashboardSPA) window.DashboardSPA.navigate(row.dataset.leagueUrl); else window.location.href = row.dataset.leagueUrl; };
       row.addEventListener('click', open);
       row.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } });
     });
