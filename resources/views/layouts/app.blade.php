@@ -156,14 +156,6 @@
       .hud-results nav, .hud-squad nav { width: 100%; overflow-x: auto; white-space: nowrap; }
       .hud-results nav a, .hud-squad nav a { flex: 1 0 auto; text-align: center; }
       .hud-results .overflow-x-auto, .hud-squad .overflow-x-auto { overflow-x: visible; }
-      .hud-results table, .hud-results table thead, .hud-results table tbody, .hud-results table tr, .hud-results table td { display: block; width: 100%; min-width: 0; }
-      .hud-results table thead { display: none; }
-      .hud-results table tbody { display: grid; gap: .65rem; }
-      .hud-results table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .15rem .5rem; border: 1px solid rgba(255,255,255,.1); border-radius: 18px; background: rgba(255,255,255,.035); padding: .55rem; }
-      .hud-results table td { display: flex; align-items: center; min-height: 2.5rem; padding: .55rem .65rem; border: 0; }
-      .hud-results table td:first-child { grid-column: 1 / -1; border-bottom: 1px solid rgba(255,255,255,.08); }
-      .hud-results table td::before { content: attr(data-label); margin-right: .5rem; color: rgba(255,255,255,.35); font-size: .63rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-      .hud-results table td:first-child::before { content: ''; margin: 0; }
       .hud-results details summary { align-items: flex-start; padding: 1rem; }
       .hud-results details summary > span { max-width: 100%; }
       .hud-results details summary > span:nth-child(2) { order: 3; width: 100%; font-size: .9rem; line-height: 1.5; }
@@ -178,18 +170,15 @@
       .hud-squad .grid-cols-2 { grid-template-columns: 1fr; }
       .hud-squad [data-power-card] select { min-width: 0; font-size: .7rem; }
       .hud-squad aside { width: 100%; }
-      .results-table-wrap { border-radius: 20px; }
-      .hud-results table.results-table { display: block; width: 100%; min-width: 0 !important; table-layout: auto; border-spacing: 0; }
-      .hud-results table.results-table thead { display: none; }
-      .hud-results table.results-table tbody { display: grid; gap: .65rem; }
-      .hud-results table.results-table tr { display: grid; grid-template-columns: 1fr 1fr; gap: .15rem .5rem; border: 1px solid rgba(255,255,255,.1); border-radius: 18px; background: linear-gradient(110deg, rgba(8,39,70,.82), rgba(5,28,49,.68)); padding: .55rem; }
-      .hud-results table.results-table td { display: flex; align-items: center; width: auto; min-height: 2.45rem; padding: .55rem .65rem; border: 0; text-align: left; }
-      .hud-results table.results-table td::before { content: attr(data-label); margin-right: .45rem; color: rgba(255,255,255,.35); font-size: .58rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-      .hud-results table.results-table td:first-child::before { content: ''; margin: 0; }
-      .hud-results table.standings-table td:first-child, .hud-results table.scorers-table td:first-child { grid-column: 1; }
-      .hud-results table.standings-table td:nth-child(2), .hud-results table.scorers-table td:nth-child(2) { grid-column: 2; }
-      .hud-results table.scorers-table td:nth-child(3), .hud-results table.scorers-table td:nth-child(4) { grid-column: auto; }
-      .hud-results table.results-table td:nth-child(2) > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+      .results-table-wrap { overflow-x: auto; border-radius: 20px; }
+      .hud-results table.results-table { display: table; width: 100%; table-layout: auto; border-spacing: 0; }
+      .hud-results table.standings-table { min-width: 620px !important; }
+      .hud-results table.scorers-table { min-width: 560px !important; }
+      .hud-results table.results-table thead { display: table-header-group; }
+      .hud-results table.results-table tbody { display: table-row-group; }
+      .hud-results table.results-table tr { display: table-row; border: 0; border-radius: 0; background: transparent; padding: 0; }
+      .hud-results table.results-table th, .hud-results table.results-table td { display: table-cell; min-height: 0; padding: .75rem .85rem; white-space: nowrap; }
+      .hud-results table.results-table td::before { content: none; }
     }
     @media (max-width: 420px) {
       header nav { padding-left: .75rem; padding-right: .75rem; }

@@ -32,11 +32,7 @@
         class="bx bx-arrow-back mr-1"></i> Back to leagues</a>
     <div class="mt-6 flex flex-wrap items-end justify-between gap-5">
       <div>
-        <p class="text-xs font-extrabold uppercase tracking-[.22em] text-uno-lime">{{ $league->name }}</p>
-        <h1 class="mt-2 text-4xl font-bold tracking-[-.04em]">{{ $simulation ? 'League results.' : 'League table.' }}</h1>
-        <p class="mt-3 text-sm text-white/50">
-          {{ $simulation ? 'The complete competition has been simulated.' : 'See who is ready and view every participant’s locked squad.' }}
-        </p>
+        <h1 class="mt-2 text-4xl font-bold tracking-[-.04em] font-extrabold uppercase text-uno-lime">{{ $league->name }}</h1>
       </div>
       <div class="flex flex-wrap items-center gap-3"><span
           class="rounded-full bg-white/10 px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-white/70">{{ $simulationInProgress ? 'Simulation in progress' : ucfirst(str_replace('_', ' ', $league->status)) }}</span>@if (!$simulation && $league->owner_id === auth()->id() && $league->status === \App\Models\League::STATUS_YET_TO_START && !$simulationInProgress && $league->readyUsers->count() === $league->users->count() && $league->users->isNotEmpty())
