@@ -98,6 +98,47 @@
     @keyframes hud-pulse { 50% { opacity: .35; transform: scale(.72); } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
     @media (max-width: 639px) { .hud-panel { border-radius: 20px; } .hud-title { letter-spacing: -.045em; } }
+    .mobile-card-table { width: 100%; }
+    .mobile-card-table thead { display: table-header-group; }
+    @media (max-width: 720px) {
+      .hud-results, .hud-squad { width: 100%; max-width: 100%; overflow: hidden; }
+      .hud-results > div:first-child { align-items: flex-start; }
+      .hud-results > div:first-child h1, .hud-squad h1 { font-size: clamp(2rem, 10vw, 3rem); line-height: 1; }
+      .hud-results nav, .hud-squad nav { width: 100%; overflow-x: auto; white-space: nowrap; }
+      .hud-results nav a, .hud-squad nav a { flex: 1 0 auto; text-align: center; }
+      .hud-results .overflow-x-auto, .hud-squad .overflow-x-auto { overflow-x: visible; }
+      .hud-results table, .hud-results table thead, .hud-results table tbody, .hud-results table tr, .hud-results table td { display: block; width: 100%; min-width: 0; }
+      .hud-results table thead { display: none; }
+      .hud-results table tbody { display: grid; gap: .65rem; }
+      .hud-results table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .15rem .5rem; border: 1px solid rgba(255,255,255,.1); border-radius: 18px; background: rgba(255,255,255,.035); padding: .55rem; }
+      .hud-results table td { display: flex; align-items: center; min-height: 2.5rem; padding: .55rem .65rem; border: 0; }
+      .hud-results table td:first-child { grid-column: 1 / -1; border-bottom: 1px solid rgba(255,255,255,.08); }
+      .hud-results table td::before { content: attr(data-label); margin-right: .5rem; color: rgba(255,255,255,.35); font-size: .63rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+      .hud-results table td:first-child::before { content: ''; margin: 0; }
+      .hud-results details summary { align-items: flex-start; padding: 1rem; }
+      .hud-results details summary > span { max-width: 100%; }
+      .hud-results details summary > span:nth-child(2) { order: 3; width: 100%; font-size: .9rem; line-height: 1.5; }
+      .hud-results details summary > span:nth-child(3) { margin-left: auto; }
+      .hud-squad section.glass-panel { padding: 1rem; }
+      .hud-squad #pitch { min-height: 390px; padding: .4rem; border-radius: 22px; }
+      .hud-squad #pitch .formation-slot { width: 4.6rem; padding: .35rem .2rem; border-radius: 12px; font-size: .58rem; }
+      .hud-squad #pitch .formation-slot > div { width: 2rem; height: 2rem; }
+      .hud-squad #pitch > .relative { min-height: 370px; gap: .15rem; }
+      .hud-squad #slots > div { gap: .35rem; }
+      .hud-squad #slots > div > button { border-radius: 12px; padding: .55rem .25rem; }
+      .hud-squad .grid-cols-2 { grid-template-columns: 1fr; }
+      .hud-squad [data-power-card] select { min-width: 0; font-size: .7rem; }
+      .hud-squad aside { width: 100%; }
+    }
+    @media (max-width: 420px) {
+      header nav { padding-left: .75rem; padding-right: .75rem; }
+      header nav > a { gap: .45rem; }
+      header nav > a span:last-child { display: none; }
+      header nav > div > a span { display: none; }
+      .hud-results, .hud-squad { padding-left: .75rem; padding-right: .75rem; }
+      .hud-results .grid-cols-2, .hud-results .sm\:grid-cols-2 { grid-template-columns: 1fr; }
+      .hud-squad #pitch .formation-slot { width: 4rem; }
+    }
   </style>
 </head>
 <body class="min-h-screen overflow-x-hidden selection:bg-uno-lime selection:text-uno-navy">
