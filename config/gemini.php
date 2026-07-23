@@ -12,4 +12,5 @@ return [
     'timeout' => env('GEMINI_TIMEOUT', 120),
     'retries' => env('GEMINI_RETRIES', 1),
     'retry_delay' => env('GEMINI_RETRY_DELAY', 1000),
+    'log_requests' => env('GEMINI_LOG_REQUESTS', true),
 ];
