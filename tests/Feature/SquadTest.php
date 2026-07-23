@@ -127,4 +127,30 @@ class SquadTest extends TestCase
         $this->assertDatabaseHas('league_effective_selections', ['user_id' => $owner->id, 'player_id' => 13]);
         $this->assertDatabaseHas('league_effective_selections', ['user_id' => $opponent->id, 'player_id' => 1]);
     }
+
+    public function test_steal_between_different_slots_keeps_effective_slot_keys_unique(): void
+    {
+        $owner = User::factory()->create(); $opponent = User::factory()->create();
+        $league = League::factory()->create(['owner_id' => $owner->id]);
+        $league->users()->attach([$owner->id, $opponent->id]);
+        $this->actingAs($owner)->postJson(route('squads.store', $league), $this->payload())->assertOk();
+        $this->actingAs($opponent)->postJson(route('squads.store', $league), $this->payload(offset: 12))->assertOk();
+
+        $this->actingAs($owner)->postJson(route('cards.store', $league), [
+            'card_type' => 'steal',
+            'target_user_id' => $opponent->id,
+            'target_player_id' => 14,
+            'replacement_player_id' => 1,
+        ])->assertCreated();
+
+        app(PowerCardResolver::class)->resolve($league->fresh());
+
+        $this->assertDatabaseHas('league_effective_selections', [
+            'user_id' => $owner->id, 'player_id' => 14, 'slot_key' => 'goalkeeper',
+        ]);
+        $this->assertDatabaseHas('league_effective_selections', [
+            'user_id' => $opponent->id, 'player_id' => 1, 'slot_key' => 'defender_1',
+        ]);
+        $this->assertDatabaseCount('league_effective_selections', 24);
+    }
 }

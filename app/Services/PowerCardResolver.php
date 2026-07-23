@@ -48,9 +48,17 @@ class PowerCardResolver
                             $applied = false;
                             $reason = 'Rejected because another Steal already changed one of the players.';
                         } else {
-                            $temporary = $squads[$targetUserId][$targetSlot];
-                            $squads[$targetUserId][$targetSlot] = $squads[$card->user_id][$replacementSlot];
-                            $squads[$card->user_id][$replacementSlot] = $temporary;
+                            $targetSelection = $squads[$targetUserId][$targetSlot];
+                            $replacementSelection = $squads[$card->user_id][$replacementSlot];
+
+                            // A selection's slot belongs to the squad it is moved into.
+                            // Keeping the source slot here creates duplicate slot keys
+                            // when the stolen and replacement players are in different
+                            // positions.
+                            $replacementSelection['slot_key'] = $targetSlot;
+                            $targetSelection['slot_key'] = $replacementSlot;
+                            $squads[$targetUserId][$targetSlot] = $replacementSelection;
+                            $squads[$card->user_id][$replacementSlot] = $targetSelection;
                             $metadata = ['target_slot' => $targetSlot, 'replacement_slot' => $replacementSlot];
                         }
                     }
