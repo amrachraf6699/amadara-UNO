@@ -11,6 +11,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="description" content="@yield('description', 'Amadara UNO Football League â€” every match, every moment.')">
   <title>@yield('title', 'Amadara UNO | Football League')</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('logo.png') }}">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
