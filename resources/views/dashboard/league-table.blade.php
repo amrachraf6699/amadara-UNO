@@ -245,7 +245,6 @@
             <i class="bx bx-trophy"></i></div>@endif<h2 dir="auto"
             class="relative mt-5 text-3xl font-extrabold {{ $containsArabic($winnerMember->name) ? 'font-arabic' : '' }}">
             {{ $winnerMember->name }}</h2>
-          <p class="relative mt-2 text-sm text-white/50">League champion · {{ $winner->points }} points</p>
       </section>@endif
 
       <section class="mt-12">
