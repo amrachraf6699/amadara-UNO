@@ -53,6 +53,17 @@ class SquadTest extends TestCase
         $this->assertNotNull($league->users()->whereKey($user->id)->first()->pivot->ready_at);
     }
 
+    public function test_member_can_view_an_opponents_locked_squad(): void
+    {
+        $owner = User::factory()->create(['name' => 'Owner']); $opponent = User::factory()->create(['name' => 'Opponent']);
+        $league = League::factory()->create(['owner_id' => $owner->id]); $league->users()->attach([$owner->id, $opponent->id]);
+        $this->actingAs($owner)->postJson(route('squads.store', $league), $this->payload())->assertOk();
+        $this->actingAs($opponent)->postJson(route('squads.store', $league), $this->payload(offset: 12))->assertOk();
+
+        $this->actingAs($owner)->get(route('leagues.show', $league))->assertOk()->assertSee('Opponent')->assertSee('View squad');
+        $this->actingAs($owner)->get(route('leagues.members.squad', [$league, $opponent]))->assertOk()->assertSee("Opponent's squad.")->assertSee('Locked 4-3-3');
+    }
+
     public function test_a_player_cannot_be_reserved_twice_in_one_league(): void
     {
         $first = User::factory()->create(); $second = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach([$first->id, $second->id]);

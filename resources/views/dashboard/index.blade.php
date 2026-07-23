@@ -35,22 +35,12 @@
         <button type="button" data-open-new-league class="mt-7 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy">New League</button>
       </section>
     @else
-      <section id="leaguesGrid" class="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3" aria-label="Your participating leagues">
+      <section id="leaguesGrid" class="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-white/[.03]" aria-label="Your participating leagues">
+        <div class="overflow-x-auto"><table class="w-full min-w-[760px] text-left text-sm"><thead class="bg-white/5 text-xs uppercase tracking-widest text-white/40"><tr><th class="px-5 py-4">League</th><th class="px-5 py-4">Status</th><th class="px-5 py-4">Ready</th><th class="px-5 py-4">Players</th><th class="px-5 py-4 text-right">Action</th></tr></thead><tbody class="divide-y divide-white/10">
         @foreach ($leagues as $league)
-          <article class="match-card glass-panel rounded-[28px] p-6">
-            <div class="flex items-start justify-between gap-4">
-              <span class="grid h-14 w-14 place-items-center rounded-2xl bg-uno-blue/20 text-3xl text-uno-lime"><i class="{{ $league->icon }}"></i></span>
-              <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white/65">{{ $statusLabels[$league->status] ?? str_replace('_', ' ', ucfirst($league->status)) }}</span>
-            </div>
-            <h2 class="mt-6 truncate text-2xl font-bold" title="{{ $league->name }}">{{ $league->name }}</h2>
-            <div class="mt-6 flex items-center justify-between border-y border-white/10 py-4 text-sm">
-              <span class="text-white/45">League code</span>
-              <strong class="tracking-[.25em] text-uno-lime">{{ $league->code }}</strong>
-            </div>
-            <div class="mt-5 flex items-center justify-between border-y border-white/10 py-4 text-sm"><span class="text-white/45">Ready players</span><strong class="text-uno-lime">{{ $league->ready_users_count }} / {{ $league->users_count }}</strong></div>
-            <div class="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-white/45"><a href="{{ route('squads.show', $league) }}" class="font-bold text-uno-lime hover:text-white">{{ $league->squads->isNotEmpty() ? 'View squad' : 'Build squad' }} <i class="bx bx-right-arrow-alt"></i></a>@if ($league->owner_id === auth()->id() && $league->status === \App\Models\League::STATUS_YET_TO_START && $league->ready_users_count === $league->users_count && $league->users_count > 0)<form method="POST" action="{{ route('leagues.start', $league) }}">@csrf<button type="submit" class="rounded-xl bg-uno-lime px-3 py-2 font-extrabold text-uno-navy hover:bg-white">Start league</button></form>@endif</div>
-          </article>
+          <tr class="hover:bg-white/[.03]"><td class="px-5 py-4"><div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-xl bg-uno-blue/20 text-xl text-uno-lime"><i class="{{ $league->icon }}"></i></span><div><strong class="block">{{ $league->name }}</strong><small class="text-white/40">Code: <span class="tracking-[.2em] text-uno-lime">{{ $league->code }}</span></small></div></div></td><td class="px-5 py-4"><span class="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white/65">{{ $statusLabels[$league->status] ?? str_replace('_', ' ', ucfirst($league->status)) }}</span></td><td class="px-5 py-4 font-bold text-uno-lime">{{ $league->ready_users_count }} / {{ $league->users_count }}</td><td class="px-5 py-4 text-white/60">{{ $league->users_count }} / {{ $league->max_users }}</td><td class="px-5 py-4 text-right"><a href="{{ route('leagues.show', $league) }}" class="font-extrabold text-uno-lime hover:text-white">Open league <i class="bx bx-right-arrow-alt"></i></a></td></tr>
         @endforeach
+        </tbody></table></div>
       </section>
     @endif
   </main>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\League;
 use App\Models\Squad;
 use App\Models\SquadSelection;
+use App\Models\User;
 use App\Services\TeamsCatalog;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -39,6 +40,25 @@ class SquadController extends Controller
             'formations' => self::FORMATIONS,
             'reservedIds' => $league->selections()->pluck('player_id')->values(),
             'ready' => (bool) $membership->pivot->ready_at,
+            'editable' => true,
+            'viewedUser' => $request->user(),
+        ]);
+    }
+
+    public function member(Request $request, League $league, User $user): View
+    {
+        $this->authorizeMembership($request, $league);
+        abort_unless($league->users()->whereKey($user->id)->exists(), 404);
+        $squad = $user->squads()->where('league_id', $league->id)->with('selections')->firstOrFail();
+
+        return view('dashboard.squad-builder', [
+            'league' => $league,
+            'squad' => $squad,
+            'formations' => self::FORMATIONS,
+            'reservedIds' => collect(),
+            'ready' => (bool) $league->users()->whereKey($user->id)->first()->pivot->ready_at,
+            'editable' => false,
+            'viewedUser' => $user,
         ]);
     }
 

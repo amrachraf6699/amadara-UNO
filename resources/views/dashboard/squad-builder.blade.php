@@ -6,6 +6,8 @@
 @section('content')
 @php
   $locked = $squad !== null;
+  $editable = $editable ?? true;
+  $viewedUser = $viewedUser ?? auth()->user();
   $saved = $squad?->selections->mapWithKeys(fn ($selection) => [$selection->slot_key => [
       'id' => $selection->player->id,
        'name' => $selection->player->name,
@@ -24,11 +26,16 @@
 <main class="mx-auto min-h-[calc(100vh-150px)] max-w-6xl px-5 py-10 lg:px-8 lg:py-14">
   <a href="{{ route('dashboard.index') }}" class="text-sm font-bold text-white/50 hover:text-uno-lime"><i class="bx bx-arrow-back mr-1"></i> Back to leagues</a>
   <div class="mt-6 flex flex-wrap items-end justify-between gap-5">
-    <div><p class="text-xs font-extrabold uppercase tracking-[.22em] text-uno-lime">{{ $league->name }}</p><h1 class="mt-2 text-4xl font-bold tracking-[-.04em]">{{ $locked ? 'Your locked squad.' : 'Build your squad.' }}</h1><p class="mt-3 text-sm text-white/50">{{ $locked ? 'This squad is final and cannot be edited.' : 'Pick 11 players and a coach. Every selection is exclusive within this league.' }}</p></div>
+    <div><p class="text-xs font-extrabold uppercase tracking-[.22em] text-uno-lime">{{ $league->name }}</p><h1 class="mt-2 text-4xl font-bold tracking-[-.04em]">{{ $locked ? ($viewedUser->id === auth()->id() ? 'Your locked squad.' : $viewedUser->name."'s squad.") : 'Build your squad.' }}</h1><p class="mt-3 text-sm text-white/50">{{ $locked ? 'This squad is final and cannot be edited.' : 'Pick 11 players and a coach. Every selection is exclusive within this league.' }}</p></div>
     @if ($locked)<span class="rounded-full bg-uno-lime px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-uno-navy"><i class="bx bx-lock-alt mr-1"></i> Locked {{ $squad->formation }}</span>@endif
   </div>
 
-  @if (!$locked)
+  <nav class="mt-8 flex gap-2 border-b border-white/10" aria-label="League sections">
+    <a href="{{ route('squads.show', $league) }}" class="rounded-t-xl border-b-2 border-uno-lime px-4 py-3 text-sm font-extrabold text-uno-lime">My formation</a>
+    <a href="{{ route('leagues.show', $league) }}" class="rounded-t-xl border-b-2 border-transparent px-4 py-3 text-sm font-bold text-white/50 hover:border-white/30 hover:text-white">Table</a>
+  </nav>
+
+  @if (!$locked && $editable)
   <section class="mt-8 glass-panel rounded-3xl p-5 sm:p-7">
     <label for="formation" class="text-sm font-bold">Formation</label>
     <select id="formation" class="mt-2 w-full max-w-xs rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-uno-lime">
@@ -68,9 +75,9 @@
     </div>
     <aside class="glass-panel rounded-3xl p-5 sm:p-6"><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Coach</p>@if ($locked) @php $coach = $squad->selections->firstWhere('role', 'coach')?->player; @endphp @if ($coach)<div class="mt-5 rounded-2xl border border-white/15 bg-white/5 p-3 text-center"><div class="mx-auto grid h-14 w-14 place-items-center overflow-hidden rounded-full bg-uno-blue/30 text-uno-lime">@if ($coach->image_url)<img src="{{ $coach->image_url }}" alt="{{ $coach->known_name ?: $coach->name }}" class="h-full w-full object-cover">@else<i class="bx bx-user text-xl"></i>@endif</div><strong class="mt-2 block truncate text-sm text-uno-lime">{{ $coach->known_name ?: $coach->name }}</strong><span class="mt-1 inline-block rounded-full bg-uno-lime/15 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-uno-lime">Coach</span><small class="mt-1 block truncate text-[10px] text-white/45">{{ collect([$coach->nationality, $coach->age ? $coach->age.' yrs' : null, $coach->height_cm ? $coach->height_cm.' cm' : null])->filter()->join(' · ') }}</small></div>@endif @else<p class="mt-2 text-sm text-white/45">Choose your coach from the same football data catalogue.</p><button type="button" data-slot="coach" class="slot-button mt-5 flex min-h-24 w-full items-center justify-center rounded-2xl border border-dashed border-white/25 bg-white/5 p-3 text-center text-sm font-bold text-white/55 hover:border-uno-lime hover:text-uno-lime">+ Select coach</button>@endif</aside>
   </section>
-  @if (!$locked)
+  @if (!$locked && $editable)
     <button id="saveSquad" type="button" disabled class="mt-6 w-full rounded-2xl bg-uno-lime px-5 py-4 text-sm font-extrabold text-uno-navy opacity-40 transition hover:bg-white">Save and lock squad</button>
-  @elseif ($league->status === \App\Models\League::STATUS_YET_TO_START)
+  @elseif ($editable && $league->status === \App\Models\League::STATUS_YET_TO_START)
     @if ($ready)
       <div class="mt-6 rounded-2xl border border-uno-lime/30 bg-uno-lime/10 px-5 py-4 text-center text-sm font-bold text-uno-lime"><i class="bx bx-check-circle mr-1"></i> You are ready. Waiting for the other league players.</div>
     @else
@@ -79,7 +86,7 @@
   @endif
 </main>
 
-@if (!$locked)
+  @if (!$locked && $editable)
 <div id="playerModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#020b15]/80 px-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="playerModalTitle">
   <div class="glass-panel w-full max-w-lg rounded-3xl p-5 shadow-uno sm:p-7"><div class="flex items-start justify-between"><div><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Selection</p><h2 id="playerModalTitle" class="mt-2 text-2xl font-bold">Choose a player</h2></div><button id="closePlayerModal" type="button" class="text-2xl text-white/45 hover:text-white" aria-label="Close"><i class="bx bx-x"></i></button></div><input id="playerSearch" type="search" minlength="3" autocomplete="off" placeholder="Type at least 3 letters" class="mt-6 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-white outline-none focus:border-uno-lime"><p id="searchHint" class="mt-2 text-xs text-white/40">Search begins after three characters.</p><div id="searchResults" class="mt-4 grid max-h-80 gap-2 overflow-y-auto"></div><button id="showMore" type="button" class="mt-4 hidden w-full rounded-xl border border-white/15 px-4 py-3 text-xs font-bold text-white/65 hover:border-uno-lime hover:text-uno-lime">Show more</button></div>
 </div>

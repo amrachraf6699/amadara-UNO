@@ -23,6 +23,14 @@ class LeagueController extends Controller
         ]);
     }
 
+    public function show(Request $request, League $league): View
+    {
+        $this->authorizeMember($request, $league);
+        $league->load(['users', 'readyUsers', 'squads']);
+
+        return view('dashboard.league-table', compact('league'));
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
