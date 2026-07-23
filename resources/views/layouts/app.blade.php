@@ -66,12 +66,14 @@
     .fixture-nav:hover:not(:disabled) { border-color: rgba(125,237,25,.55); background: rgba(125,237,25,.1); color: #d8ff5f; }
     .fixture-nav:disabled { cursor: not-allowed; opacity: .35; }
     .goal-timeline { position: relative; }
-    .goal-event { position: relative; display: grid; grid-template-columns: 2.5rem 1rem 2.25rem minmax(0,1fr); align-items: center; gap: .55rem; min-height: 3.25rem; }
-    .goal-event::before { content: ''; position: absolute; left: 2.98rem; top: 0; bottom: 0; width: 1px; background: rgba(125,237,25,.28); }
-    .goal-event:first-of-type::before { top: 50%; }
-    .goal-event:last-of-type::before { bottom: 50%; }
-    .goal-event time { position: relative; z-index: 1; font-size: .72rem; font-weight: 900; color: #7dec19; }
-    .goal-event-dot { position: relative; z-index: 2; width: .55rem; height: .55rem; border: 2px solid #031323; border-radius: 999px; background: #7dec19; box-shadow: 0 0 0 2px rgba(125,237,25,.25); }
+    .goal-timeline::before { content: ''; position: absolute; left: 50%; top: 4.15rem; bottom: 1rem; width: 1px; background: rgba(125,237,25,.28); transform: translateX(-50%); }
+    .goal-event { position: relative; display: flex; align-items: center; justify-content: flex-end; gap: .55rem; min-height: 3.25rem; padding-left: 50%; }
+    .goal-event::before { display: none; }
+    .goal-event-away { justify-content: flex-start; padding-right: 50%; padding-left: 0; }
+    .goal-event time { position: relative; z-index: 1; flex: 0 0 auto; font-size: .72rem; font-weight: 900; color: #7dec19; }
+    .goal-event > span:last-child { min-width: 0; text-align: right; }
+    .goal-event-away > span:last-child { text-align: left; }
+    .goal-event-dot { position: absolute; z-index: 2; left: calc(50% - .275rem); width: .55rem; height: .55rem; border: 2px solid #031323; border-radius: 999px; background: #7dec19; box-shadow: 0 0 0 2px rgba(125,237,25,.25); }
     .goal-event-away .goal-event-dot { background: #55b8ff; box-shadow: 0 0 0 2px rgba(85,184,255,.25); }
     .match-details summary::-webkit-details-marker { display: none; }
     .match-details[open] summary { color: #d8ff5f; }

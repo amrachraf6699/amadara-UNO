@@ -51,13 +51,11 @@
     @endphp
     <section id="powerCardDock" class="power-card-dock" aria-label="Power cards">
       <div class="power-card-dock-inner">
-        <div class="flex min-w-0 items-center gap-3"><span class="hidden text-xs font-extrabold uppercase tracking-[.2em] text-white/45 sm:block">Power cards</span><div class="power-card-dock-list">
           @foreach ($powerCards as $type => $powerCard)
             @php $card = $submittedCards->get($type); @endphp
             <button type="button" data-power-card-open="{{ $type }}" aria-pressed="{{ $card ? 'true' : 'false' }}" class="power-card-dock-card {{ $card ? 'is-activated' : '' }}" title="Open {{ $powerCard['label'] }} card"><i class="{{ $powerCard['icon'] }}"></i><strong>{{ $powerCard['label'] }}</strong><small>{{ $card ? 'Activated' : 'Play card' }}</small></button>
           @endforeach
         </div></div>
-        <span class="hidden text-[10px] uppercase tracking-widest text-white/35 md:block">Tap a card to play</span>
       </div>
     </section>
 
