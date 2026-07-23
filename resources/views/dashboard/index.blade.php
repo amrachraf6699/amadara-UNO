@@ -11,36 +11,46 @@
       'running' => 'Running',
       'finished' => 'Finished',
     ];
+    $activeLeagues = $leagues->whereIn('status', ['yet_to_start', 'running'])->count();
+    $readySquads = $leagues->sum('ready_users_count');
+    $finishedLeagues = $leagues->where('status', 'finished')->count();
   @endphp
 
-  <main class="mx-auto min-h-[calc(100vh-150px)] max-w-7xl px-5 py-12 lg:px-8 lg:py-16">
+  <main class="mx-auto min-h-[calc(100vh-150px)] max-w-7xl px-4 py-8 lg:px-8 lg:py-14">
     <div class="flex flex-wrap items-end justify-between gap-6">
       <div>
-        <p class="text-xs font-extrabold uppercase tracking-[.22em] text-uno-lime">League headquarters</p>
-        <h1 class="mt-3 text-4xl font-bold tracking-[-.04em] sm:text-6xl">Your leagues<span class="text-uno-lime">.</span></h1>
-        <p class="mt-4 max-w-xl text-sm leading-7 text-white/55 sm:text-base">Keep your competitions close, invite your squad, and get ready for the next matchday.</p>
+        <p class="hud-kicker">Season control center</p>
+        <h1 class="hud-title mt-3 text-4xl font-black sm:text-6xl">Your leagues<span class="text-uno-lime">.</span></h1>
+        <p class="mt-4 max-w-xl text-sm leading-7 text-white/55 sm:text-base">Track your competitions, lock your squad, and own the next matchday.</p>
       </div>
       @if(!$leagues->isEmpty())
-      <button id="newLeagueButton" type="button" class="rounded-xl bg-uno-lime px-5 py-3 text-sm font-extrabold text-uno-navy transition hover:-translate-y-0.5 hover:bg-white">
+      <button id="newLeagueButton" type="button" class="hud-action px-5 py-3 text-sm">
         <i class="bx bx-plus mr-1 align-middle text-lg"></i> New league
       </button>
       @endif
     </div>
 
+    <section class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Season metrics">
+      <div class="hud-panel p-5"><p class="hud-kicker">Competitions</p><p class="hud-number mt-3 text-4xl font-black text-white">{{ $leagues->count() }}</p><p class="mt-1 text-xs text-white/40">Total leagues</p></div>
+      <div class="hud-panel p-5"><p class="hud-kicker">Live board</p><p class="hud-number mt-3 text-4xl font-black text-uno-lime">{{ $activeLeagues }}</p><p class="mt-1 text-xs text-white/40">Active competitions</p></div>
+      <div class="hud-panel p-5"><p class="hud-kicker">Ready squads</p><p class="hud-number mt-3 text-4xl font-black text-sky-300">{{ $readySquads }}</p><p class="mt-1 text-xs text-white/40">Across your leagues</p></div>
+      <div class="hud-panel p-5"><p class="hud-kicker">Hall of fame</p><p class="hud-number mt-3 text-4xl font-black text-white">{{ $finishedLeagues }}</p><p class="mt-1 text-xs text-white/40">Finished competitions</p></div>
+    </section>
+
     @if ($leagues->isEmpty())
-      <section id="emptyLeaguesState" class="glass-panel mt-10 rounded-[28px] px-6 py-16 text-center sm:px-10">
+      <section id="emptyLeaguesState" class="hud-panel mt-10 px-6 py-16 text-center sm:px-10">
         <div class="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-uno-blue/20 text-4xl text-uno-lime"><i class="bx bx-trophy"></i></div>
         <h2 class="mt-6 text-2xl font-bold">Your next competition starts here.</h2>
         <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-white/50">Create a league for your squad or join an existing competition with its five-character code.</p>
         <button type="button" data-open-new-league class="mt-7 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:border-uno-lime/60 hover:bg-uno-lime hover:text-uno-navy">New League</button>
       </section>
     @else
-      <section id="leaguesGrid" class="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-white/[.03]" aria-label="Your participating leagues">
-        <div class="overflow-x-auto"><table class="w-full min-w-[760px] text-left text-sm"><thead class="bg-white/5 text-xs uppercase tracking-widest text-white/40"><tr><th class="px-5 py-4">League</th><th class="px-5 py-4">Status</th><th class="px-5 py-4">Ready</th><th class="px-5 py-4">Players</th><th class="px-5 py-4 text-right">Action</th></tr></thead><tbody class="divide-y divide-white/10">
+      <section id="leaguesGrid" class="hud-league-table mt-10" aria-label="Your participating leagues">
+        <div><div class="mb-4 flex items-end justify-between"><div><p class="hud-kicker">Competition lobby</p><h2 class="mt-2 text-2xl font-black">Your fixtures.</h2></div><span class="text-xs font-bold uppercase tracking-widest text-white/35">{{ $leagues->count() }} slots</span></div><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-white/5 text-xs uppercase tracking-widest text-white/40"><tr><th class="px-5 py-4">League</th><th class="px-5 py-4">Status</th><th class="px-5 py-4">Ready</th><th class="px-5 py-4">Players</th><th class="px-5 py-4 text-right">Action</th></tr></thead><tbody class="divide-y divide-white/10">
         @foreach ($leagues as $league)
           <tr class="hover:bg-white/[.03]"><td class="px-5 py-4"><div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-xl bg-uno-blue/20 text-xl text-uno-lime"><i class="{{ $league->icon }}"></i></span><div><strong class="block">{{ $league->name }}</strong><small class="text-white/40">Code: <span class="tracking-[.2em] text-uno-lime">{{ $league->code }}</span></small></div></div></td><td class="px-5 py-4"><span class="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white/65">{{ $statusLabels[$league->status] ?? str_replace('_', ' ', ucfirst($league->status)) }}</span></td><td class="px-5 py-4 font-bold text-uno-lime">{{ $league->ready_users_count }} / {{ $league->users_count }}</td><td class="px-5 py-4 text-white/60">{{ $league->users_count }} / {{ $league->max_users }}</td><td class="px-5 py-4 text-right"><a href="{{ route('leagues.show', $league) }}" class="font-extrabold text-uno-lime hover:text-white">Open league <i class="bx bx-right-arrow-alt"></i></a></td></tr>
         @endforeach
-        </tbody></table></div>
+        </tbody></table></div></div>
       </section>
     @endif
   </main>

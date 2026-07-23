@@ -27,7 +27,7 @@
   if (!$locked) foreach ($formations[array_key_first($formations)] as $role => $count) for ($i = 1; $i <= $count; $i++) $slotKeys[] = "{$role}_{$i}";
 @endphp
 
-<main class="mx-auto min-h-[calc(100vh-150px)] max-w-6xl px-5 py-10 lg:px-8 lg:py-14">
+<main class="hud-squad mx-auto min-h-[calc(100vh-150px)] max-w-6xl px-4 py-8 lg:px-8 lg:py-14">
   <a href="{{ route('dashboard.index') }}" class="text-sm font-bold text-white/50 hover:text-uno-lime"><i class="bx bx-arrow-back mr-1"></i> Back to leagues</a>
   <div class="mt-6 flex flex-wrap items-end justify-between gap-5">
     <div><p class="text-xs font-extrabold uppercase tracking-[.22em] text-uno-lime">{{ $league->name }}</p><h1 class="mt-2 flex items-center gap-3 text-4xl font-bold tracking-[-.04em]">@if ($locked && $viewedTeamLogo)<img src="{{ $viewedTeamLogo }}" alt="" class="h-12 w-12 rounded-xl object-cover">@endif{{ $locked ? ($viewedUser->id === auth()->id() ? 'Your locked squad.' : $viewedTeamName."'s squad.") : 'Build your squad.' }}</h1><p class="mt-3 text-sm text-white/50">{{ $locked ? 'This squad is final and cannot be edited.' : 'Pick 11 players and a coach. Every selection is exclusive within this league.' }}</p></div>
