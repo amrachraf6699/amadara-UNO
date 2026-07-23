@@ -61,8 +61,9 @@ RULES:
 7. Boost affects only the booster’s home fixture against the selected opponent.
 8. Do not favor fame alone.
 9. Keep one consistent simulation logic across all fixtures.
-10. Return every goal scorer for each match with the scoring player's integer user_id, integer player_id, and a realistic integer minute from 1 to 120. The number of home goal scorers must equal home_score and the number of away goal scorers must equal away_score. Use an empty array when a team scores zero.
-11. Return a short fictional summary of each match, maximum 280 characters.
+10. Return home_goal_scorers and away_goal_scorers as separate arrays. Each scorer must contain the scoring player's integer user_id, integer player_id, realistic integer minute from 1 to 120, and a short goal description. The number of scorers in each array must equal that team's score. Use an empty array when a team scores zero.
+11. Return 6 to 14 chronological events in the events array for every match, including goals plus believable chances, saves, cards, substitutions, injuries, tactical changes, or set pieces. Each event must have minute, type, team_user_id, optional player_id, and vivid description. Do not invent events that contradict the score or squads.
+12. Return a match report with a compelling 2-4 sentence narrative, maximum 900 characters, plus 2-5 decisive factors.
 
 INPUT JSON:
 {$input}
@@ -73,7 +74,7 @@ REQUIRED OUTPUT SHAPE:
   "league_id":0,
   "assumptions":["short assumption"],
   "player_evaluations":[{"player_id":0,"peak_role":"goalkeeper|defender|midfielder|forward|coach","peak_rating":0,"role_fit":0,"fitness_at_peak":0,"short_reason":"one sentence"}],
-  "matches":[{"fixture_id":"stable-id","home_user_id":0,"away_user_id":0,"home_score":0,"away_score":0,"result":"HOME_WIN|DRAW|AWAY_WIN","goal_scorers":[{"user_id":0,"player_id":0,"minute":0}],"home_performance_rating":0,"away_performance_rating":0,"decisive_factors":["factor"],"player_impacts":[{"player_id":0,"user_id":0,"impact":0,"reason":"short reason"}],"narrative":"Maximum 280 characters."}],
+  "matches":[{"fixture_id":"stable-id","home_user_id":0,"away_user_id":0,"home_score":0,"away_score":0,"result":"HOME_WIN|DRAW|AWAY_WIN","home_goal_scorers":[{"user_id":0,"player_id":0,"minute":0,"description":"goal description"}],"away_goal_scorers":[],"events":[{"minute":0,"type":"goal|chance|save|card|substitution|injury|tactical|set_piece|momentum","team_user_id":0,"player_id":0,"description":"match event"}],"home_performance_rating":0,"away_performance_rating":0,"decisive_factors":["factor"],"player_impacts":[{"player_id":0,"user_id":0,"impact":0,"reason":"short reason"}],"narrative":"A 2-4 sentence match report, maximum 900 characters."}],
   "standings_projection":[{"user_id":0,"played":0,"wins":0,"draws":0,"losses":0,"goals_for":0,"goals_against":0,"goal_difference":0}]
 }
 
@@ -83,7 +84,8 @@ VALIDATION:
 - Scores must be non-negative integers.
 - Ratings must be integers from 0 to 100.
 - Impact must be an integer from -100 to 100.
-- goal_scorers must be an array; every scorer must belong to the correct home or away squad, and scorer count must equal the corresponding score.
+- home_goal_scorers and away_goal_scorers must be arrays; every scorer must belong to the correct squad, and each scorer count must equal the corresponding score.
+- events must be chronological, contain 6-14 believable events, and every event team/player ID must belong to the fixture when present.
 - Every player impact must belong to that fixture’s supplied squad.
 - If input cannot be satisfied, return {"error":{"code":"INVALID_SIMULATION_INPUT","message":"short explanation"}}.
 PROMPT;

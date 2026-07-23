@@ -10,7 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 
   <script>
@@ -33,6 +33,26 @@
     :root { color-scheme: dark; }
     html { scroll-behavior: smooth; }
     body { font-family: "Space Grotesk", sans-serif; background: #031323; color: #f7fbff; }
+    .font-arabic { font-family: "Tajawal", sans-serif; }
+    [dir="auto"] { unicode-bidi: plaintext; }
+    .team-avatar { display: grid; place-items: center; overflow: hidden; border-radius: 999px; background: linear-gradient(145deg, rgba(8,120,209,.35), rgba(125,237,25,.12)); color: #7dec19; }
+    .team-avatar-sm { width: 2.25rem; height: 2.25rem; }
+    .team-avatar-md { width: 4rem; height: 4rem; font-size: 1.5rem; }
+    .team-avatar-lg { width: 3.75rem; height: 3.75rem; }
+    .team-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .modal-open { overflow: hidden; }
+    .formation-board { position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,.16); border-radius: 24px; background: linear-gradient(180deg, rgba(27,133,77,.95), rgba(5,91,54,.95)); }
+    .formation-lines { position: absolute; inset: 1rem; border: 1px solid rgba(255,255,255,.2); border-radius: 16px; background: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px); background-size: 35px 35px; }
+    .fixture-shell { background: linear-gradient(145deg, rgba(8,39,70,.88), rgba(3,20,37,.8)); box-shadow: 0 22px 65px rgba(0,0,0,.2), inset 0 1px rgba(255,255,255,.06); }
+    .fixture-nav { display: inline-flex; align-items: center; gap: .35rem; border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: .55rem .7rem; color: rgba(255,255,255,.65); font-size: .72rem; font-weight: 800; transition: border-color .2s ease, color .2s ease, background .2s ease; }
+    .fixture-nav:hover:not(:disabled) { border-color: rgba(125,237,25,.55); background: rgba(125,237,25,.1); color: #d8ff5f; }
+    .fixture-nav:disabled { cursor: not-allowed; opacity: .35; }
+    .results-table-wrap { overflow-x: auto; border: 1px solid rgba(255,255,255,.1); border-radius: 24px; background: rgba(255,255,255,.03); }
+    .results-table { border-collapse: separate; border-spacing: 0; }
+    .results-table thead { background: rgba(255,255,255,.05); color: rgba(255,255,255,.4); font-size: .7rem; text-transform: uppercase; letter-spacing: .12em; }
+    .results-table th, .results-table td { padding: 1rem 1.25rem; white-space: nowrap; }
+    .results-table tbody tr + tr td { border-top: 1px solid rgba(255,255,255,.08); }
+    .results-table tbody tr:hover { background: rgba(255,255,255,.035); }
     .pitch-grid { background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px); background-size: 42px 42px; }
     .stadium-glow { background: radial-gradient(circle at 10% 5%, rgba(17,151,239,.25), transparent 32%), radial-gradient(circle at 90% 18%, rgba(73,207,25,.13), transparent 26%); }
     .glass-panel { background: rgba(8,39,70,.72); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(18px); }
@@ -153,6 +173,13 @@
       .hud-squad .grid-cols-2 { grid-template-columns: 1fr; }
       .hud-squad [data-power-card] select { min-width: 0; font-size: .7rem; }
       .hud-squad aside { width: 100%; }
+      .hud-results .results-table, .hud-results .results-table thead, .hud-results .results-table tbody, .hud-results .results-table tr, .hud-results .results-table th, .hud-results .results-table td { display: table-cell; width: auto; min-width: 0; }
+      .hud-results .results-table thead { display: table-header-group; }
+      .hud-results .results-table tbody { display: table-row-group; }
+      .hud-results .results-table tr { display: table-row; border: 0; padding: 0; background: transparent; }
+      .hud-results .results-table th, .hud-results .results-table td { display: table-cell; min-height: 0; padding: .75rem .85rem; }
+      .hud-results .results-table td::before { content: none; }
+      .results-table-wrap { border-radius: 20px; }
     }
     @media (max-width: 420px) {
       header nav { padding-left: .75rem; padding-right: .75rem; }

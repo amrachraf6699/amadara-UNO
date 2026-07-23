@@ -25,17 +25,37 @@ class SimulationResultValidator
             if (! is_int($home) || ! is_int($away) || $home < 0 || $away < 0) $errors[] = "Fixture {$fixtureId} has invalid scores.";
             $expected = $home === $away ? 'DRAW' : ($home > $away ? 'HOME_WIN' : 'AWAY_WIN');
             if (($match['result'] ?? null) !== $expected) $errors[] = "Fixture {$fixtureId} has an inconsistent result.";
-            $scorers = $match['goal_scorers'] ?? null;
-            if (! is_array($scorers)) $errors[] = "Fixture {$fixtureId} has invalid goal scorers.";
+            $homeScorers = $match['home_goal_scorers'] ?? null;
+            $awayScorers = $match['away_goal_scorers'] ?? null;
+            if ($homeScorers === null || $awayScorers === null) {
+                $legacyScorers = $match['goal_scorers'] ?? null;
+                $homeScorers = is_array($legacyScorers) ? array_values(array_filter($legacyScorers, fn ($scorer) => (int) ($scorer['user_id'] ?? 0) === (int) $fixture['home_user_id'])) : null;
+                $awayScorers = is_array($legacyScorers) ? array_values(array_filter($legacyScorers, fn ($scorer) => (int) ($scorer['user_id'] ?? 0) === (int) $fixture['away_user_id'])) : null;
+            }
+            if (! is_array($homeScorers) || ! is_array($awayScorers)) $errors[] = "Fixture {$fixtureId} has invalid goal scorers.";
             else {
-                $homeScorers = 0; $awayScorers = 0;
-                foreach ($scorers as $scorer) {
+                $homeCount = 0; $awayCount = 0;
+                foreach (['home' => $homeScorers, 'away' => $awayScorers] as $side => $scorers) foreach ($scorers as $scorer) {
                     $scorerUser = (int) ($scorer['user_id'] ?? -1); $scorerPlayer = (int) ($scorer['player_id'] ?? -1);
-                    if ($scorerUser === (int) $fixture['home_user_id']) $homeScorers++; elseif ($scorerUser === (int) $fixture['away_user_id']) $awayScorers++; else $errors[] = "Fixture {$fixtureId} has a scorer from an invalid team.";
+                    if ($side === 'home' && $scorerUser === (int) $fixture['home_user_id']) $homeCount++; elseif ($side === 'away' && $scorerUser === (int) $fixture['away_user_id']) $awayCount++; else $errors[] = "Fixture {$fixtureId} has a scorer in the wrong team list.";
                     if (! in_array($scorerPlayer, $playersByUser[$scorerUser] ?? [], true)) $errors[] = "Fixture {$fixtureId} has an invalid goal scorer.";
                     if (! is_int($scorer['minute'] ?? null) || $scorer['minute'] < 1 || $scorer['minute'] > 120) $errors[] = "Fixture {$fixtureId} has an invalid goal minute.";
                 }
-                if ($homeScorers !== (int) $home || $awayScorers !== (int) $away) $errors[] = "Fixture {$fixtureId} goal scorers do not match the score.";
+                if ($homeCount !== (int) $home || $awayCount !== (int) $away) $errors[] = "Fixture {$fixtureId} goal scorers do not match the score.";
+            }
+            $events = $match['events'] ?? null;
+            if ($events !== null && ! is_array($events)) $errors[] = "Fixture {$fixtureId} has invalid match events.";
+            elseif (is_array($events) && (count($events) < 6 || count($events) > 14)) $errors[] = "Fixture {$fixtureId} must contain between 6 and 14 match events.";
+            elseif (is_array($events)) {
+                $lastMinute = 0;
+                foreach ($events as $event) {
+                    $eventUser = (int) ($event['team_user_id'] ?? -1); $eventPlayer = $event['player_id'] ?? null;
+                    if (! is_int($event['minute'] ?? null) || $event['minute'] < 1 || $event['minute'] > 120 || $event['minute'] < $lastMinute) $errors[] = "Fixture {$fixtureId} has invalid event timing.";
+                    $lastMinute = (int) ($event['minute'] ?? 0);
+                    if (! in_array($eventUser, [(int) $fixture['home_user_id'], (int) $fixture['away_user_id']], true)) $errors[] = "Fixture {$fixtureId} has an event from an invalid team.";
+                    if ($eventPlayer !== null && ! in_array((int) $eventPlayer, $playersByUser[$eventUser] ?? [], true)) $errors[] = "Fixture {$fixtureId} has an event with an invalid player.";
+                    if (! is_string($event['type'] ?? null) || ! is_string($event['description'] ?? null) || trim($event['description']) === '') $errors[] = "Fixture {$fixtureId} has an incomplete event.";
+                }
             }
             foreach (['home_performance_rating', 'away_performance_rating'] as $field) if (! is_int($match[$field] ?? null) || $match[$field] < 0 || $match[$field] > 100) $errors[] = "Fixture {$fixtureId} has an invalid rating.";
             foreach (($match['player_impacts'] ?? []) as $impact) {
