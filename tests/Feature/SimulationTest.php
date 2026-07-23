@@ -38,6 +38,7 @@ class SimulationTest extends TestCase
             'fixture_id' => $match->fixture_id, 'home_user_id' => $match->home_user_id, 'away_user_id' => $match->away_user_id,
             'home_score' => $match->home_user_id === $home->id ? 2 : 0, 'away_score' => $match->home_user_id === $home->id ? 0 : 2,
             'result' => $match->home_user_id === $home->id ? 'HOME_WIN' : 'AWAY_WIN', 'home_performance_rating' => 80, 'away_performance_rating' => 70,
+            'goal_scorers' => $match->home_user_id === $home->id ? [['user_id' => $home->id, 'player_id' => 1, 'minute' => 12], ['user_id' => $home->id, 'player_id' => 2, 'minute' => 67]] : [['user_id' => $home->id, 'player_id' => 1, 'minute' => 34], ['user_id' => $home->id, 'player_id' => 2, 'minute' => 81]],
             'decisive_factors' => ['formation balance'], 'player_impacts' => [], 'narrative' => 'A fictional test match.',
         ])->all(), 'standings_projection' => [['user_id' => $home->id], ['user_id' => $away->id]]];
         GeminiAi::shouldReceive('generateText')->once()->andReturn(json_encode($output));

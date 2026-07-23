@@ -25,6 +25,18 @@ class SimulationResultValidator
             if (! is_int($home) || ! is_int($away) || $home < 0 || $away < 0) $errors[] = "Fixture {$fixtureId} has invalid scores.";
             $expected = $home === $away ? 'DRAW' : ($home > $away ? 'HOME_WIN' : 'AWAY_WIN');
             if (($match['result'] ?? null) !== $expected) $errors[] = "Fixture {$fixtureId} has an inconsistent result.";
+            $scorers = $match['goal_scorers'] ?? null;
+            if (! is_array($scorers)) $errors[] = "Fixture {$fixtureId} has invalid goal scorers.";
+            else {
+                $homeScorers = 0; $awayScorers = 0;
+                foreach ($scorers as $scorer) {
+                    $scorerUser = (int) ($scorer['user_id'] ?? -1); $scorerPlayer = (int) ($scorer['player_id'] ?? -1);
+                    if ($scorerUser === (int) $fixture['home_user_id']) $homeScorers++; elseif ($scorerUser === (int) $fixture['away_user_id']) $awayScorers++; else $errors[] = "Fixture {$fixtureId} has a scorer from an invalid team.";
+                    if (! in_array($scorerPlayer, $playersByUser[$scorerUser] ?? [], true)) $errors[] = "Fixture {$fixtureId} has an invalid goal scorer.";
+                    if (! is_int($scorer['minute'] ?? null) || $scorer['minute'] < 1 || $scorer['minute'] > 120) $errors[] = "Fixture {$fixtureId} has an invalid goal minute.";
+                }
+                if ($homeScorers !== (int) $home || $awayScorers !== (int) $away) $errors[] = "Fixture {$fixtureId} goal scorers do not match the score.";
+            }
             foreach (['home_performance_rating', 'away_performance_rating'] as $field) if (! is_int($match[$field] ?? null) || $match[$field] < 0 || $match[$field] > 100) $errors[] = "Fixture {$fixtureId} has an invalid rating.";
             foreach (($match['player_impacts'] ?? []) as $impact) {
                 $impactUser = (int) ($impact['user_id'] ?? -1); $impactPlayer = (int) ($impact['player_id'] ?? -1);

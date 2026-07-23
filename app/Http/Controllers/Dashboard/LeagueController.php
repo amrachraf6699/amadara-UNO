@@ -38,13 +38,31 @@ class LeagueController extends Controller
             if ($member) $standing->user->setAttribute('name', $member->name);
         });
         $simulation?->matches->each(function ($match) use ($league): void {
+            $scorerLabels = [];
             foreach (['homeUser', 'awayUser'] as $relation) {
                 $member = $league->users->firstWhere('id', $match->{$relation}->id);
                 if ($member) $match->{$relation}->setAttribute('name', $member->name);
             }
+            foreach ($match->goal_scorers ?? [] as $scorer) {
+                $selection = $league->effectiveSelections->first(fn ($item) => (int) $item->user_id === (int) $scorer['user_id'] && (int) $item->player_id === (int) $scorer['player_id']);
+                $name = $selection?->player_data['known_name'] ?? $selection?->player_data['name'] ?? 'Unknown player';
+                $scorerLabels[] = $name.' ('.$scorer['minute']."')";
+            }
+            if ($scorerLabels) $match->setAttribute('narrative', 'Goal scorers: '.implode(', ', $scorerLabels).($match->narrative ? ' — '.$match->narrative : ''));
         });
+        $scorerTotals = collect();
+        $simulation?->matches->each(function ($match) use (&$scorerTotals, $league): void {
+            foreach ($match->goal_scorers ?? [] as $scorer) {
+                $selection = $league->effectiveSelections->first(fn ($item) => (int) $item->user_id === (int) $scorer['user_id'] && (int) $item->player_id === (int) $scorer['player_id']);
+                $key = $scorer['user_id'].':'.$scorer['player_id'];
+                $row = $scorerTotals->get($key, ['user_id' => (int) $scorer['user_id'], 'player_id' => (int) $scorer['player_id'], 'name' => $selection?->player_data['known_name'] ?? $selection?->player_data['name'] ?? 'Unknown player', 'team' => $league->users->firstWhere('id', $scorer['user_id'])?->name ?? 'Team', 'goals' => 0]);
+                $row['goals']++;
+                $scorerTotals->put($key, $row);
+            }
+        });
+        $scorerTotals = $scorerTotals->sortByDesc('goals')->values();
 
-        return view('dashboard.league-table', compact('league', 'simulation'));
+        return view('dashboard.league-table', compact('league', 'simulation', 'scorerTotals'));
     }
 
     public function simulationStatus(Request $request, League $league): JsonResponse

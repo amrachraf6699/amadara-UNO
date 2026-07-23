@@ -39,6 +39,9 @@
       document.querySelector('[data-winner]')?.querySelector('[data-confetti]') && (() => { const box = document.querySelector('[data-winner] [data-confetti]'); for (let i = 0; i < 70; i++) { const piece = document.createElement('i'); piece.style.left = `${Math.random() * 100}%`; piece.style.background = ['#d8ff5f', '#fff', '#55b8ff', '#ffcf5c'][i % 4]; piece.style.animationDelay = `${Math.random() * 1.5}s`; piece.style.transform = `rotate(${Math.random() * 360}deg)`; box.appendChild(piece); } })();
     </script>
   @endif
+    @if ($simulation)
+      <section class="mt-12"><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Top scorers</p><h2 class="mt-2 text-2xl font-bold">Golden boot table.</h2><div class="mt-4 overflow-hidden rounded-3xl border border-white/10 bg-white/[.03]"><table class="w-full text-left text-sm"><thead class="bg-white/5 text-xs uppercase tracking-widest text-white/40"><tr><th class="px-5 py-4">#</th><th class="px-5 py-4">Player</th><th class="px-5 py-4">Team</th><th class="px-5 py-4 text-right">Goals</th></tr></thead><tbody class="divide-y divide-white/10">@foreach ($scorerTotals as $rank => $scorer)<tr><td class="px-5 py-4 font-bold text-white/40">{{ $rank + 1 }}</td><td class="px-5 py-4 font-bold">{{ $scorer['name'] }}</td><td class="px-5 py-4 text-white/60">{{ $scorer['team'] }}</td><td class="px-5 py-4 text-right text-lg font-extrabold text-uno-lime">{{ $scorer['goals'] }}</td></tr>@endforeach</tbody></table></div></section>
+    @endif
 </main>
 <style>[data-confetti] i{position:absolute;top:-10%;width:8px;height:14px;animation:fall 3.5s linear infinite;opacity:.9}@keyframes fall{to{top:110%;transform:translateY(100vh) rotate(720deg)}}</style>
 @endsection

@@ -109,6 +109,7 @@ class LeagueSimulationService
                 $awayPoints = $awayWin ? 3 : 0;
                 $match->update([
                     'status' => 'completed', 'home_score' => $homeScore, 'away_score' => $awayScore,
+                    'goal_scorers' => $matchData['goal_scorers'],
                     'result' => $matchData['result'], 'home_points' => $homePoints, 'away_points' => $awayPoints,
                     'decisive_factors' => $matchData['decisive_factors'] ?? [], 'player_impacts' => $matchData['player_impacts'] ?? [],
                     'narrative' => Str::limit((string) ($matchData['narrative'] ?? ''), 280, ''), 'raw_data' => $matchData,
