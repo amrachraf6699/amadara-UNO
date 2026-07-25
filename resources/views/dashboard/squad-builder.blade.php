@@ -12,6 +12,8 @@
   $viewedTeamLogo = $viewedTeamLogo ?? null;
   $submittedCards = $submittedCards ?? collect();
   $opponents = $opponents ?? collect();
+  $season = $season ?? null;
+  $transfersUsed = $transfersUsed ?? 0;
   $draft = $draft ?? null;
   $draftSelections = $draftSelections ?? collect();
   $saved = $squad ? $squad->selections->mapWithKeys(fn ($selection) => [$selection->slot_key => [
@@ -45,6 +47,11 @@
   </nav>
 
   <section class="hud-progress-strip mt-5" aria-label="Squad progression"><div class="hud-progress-step {{ ! $locked ? 'is-current' : 'is-complete' }}"><span>01</span><strong>Build squad</strong><small>{{ $locked ? 'Complete' : 'In progress' }}</small></div><div class="hud-progress-line"></div><div class="hud-progress-step {{ $locked ? 'is-complete' : '' }}"><span>02</span><strong>Lock formation</strong><small>{{ $locked ? 'Locked' : 'Pending' }}</small></div><div class="hud-progress-line"></div><div class="hud-progress-step {{ $ready ? 'is-complete' : ($locked ? 'is-current' : '') }}"><span>03</span><strong>Ready up</strong><small>{{ $ready ? 'Ready' : ($locked ? 'Waiting' : 'Locked') }}</small></div></section>
+
+  @if ($season?->status === \App\Models\LeagueSeason::TRANSFER_WINDOW && $editable)
+    <section class="mt-6 glass-panel rounded-3xl p-5 sm:p-7"><div class="flex items-center justify-between gap-3"><div><p class="hud-kicker">Season {{ $season->number }} transfer window</p><h2 class="mt-2 text-xl font-black">Transfers used: {{ $transfersUsed }} / 3</h2></div><i class="bx bx-transfer-alt text-3xl text-uno-lime"></i></div>@if($transfersUsed < 3)<form id="transferForm" class="mt-5 grid gap-3 sm:grid-cols-2"><select name="outgoing_player_id" required class="rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-sm text-white"><option value="">Replace a current player</option>@foreach($squad->selections as $selection)<option value="{{ $selection->player_id }}">{{ $selection->player_data['known_name'] ?? $selection->player_data['name'] }}</option>@endforeach</select><input id="transferSearch" type="search" placeholder="Search incoming player" class="rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white"><input type="hidden" name="incoming_player_id" required><button type="submit" class="rounded-xl bg-uno-lime px-4 py-3 text-sm font-extrabold text-uno-navy sm:col-span-2">Complete transfer</button></form><div id="transferResults" class="mt-3 grid gap-2"></div>@else<p class="mt-4 text-sm text-white/55">You have used all three transfers this season.</p>@endif</section>
+    <script>(() => { const form=document.getElementById('transferForm'), search=document.getElementById('transferSearch'), results=document.getElementById('transferResults'); if(!form) return; let timer; search.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(async()=>{if(search.value.trim().length<3)return results.innerHTML='';const u=new URL(@json(route('squads.players.search',$league)),location.origin);u.searchParams.set('q',search.value);const d=await fetch(u,{headers:{Accept:'application/json'}}).then(r=>r.json());results.innerHTML=(d.results||[]).map(p=>`<button type="button" data-id="${p.id}" class="rounded-xl border border-white/10 p-3 text-left hover:border-uno-lime">${p.known_name||p.name}</button>`).join('');},250)});results.addEventListener('click',e=>{const b=e.target.closest('[data-id]');if(!b)return;form.incoming_player_id.value=b.dataset.id;search.value=b.textContent;results.innerHTML='';});form.addEventListener('submit',async e=>{e.preventDefault();const r=await fetch(@json(route('leagues.transfers.store',$league)),{method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]')?.content,'Accept':'application/json'},body:new FormData(form)});const d=await r.json();if(!r.ok)return window.showToast?.(d.message||'Transfer failed.','error');window.showToast?.(d.message);location.reload();});})();</script>
+  @endif
 
   @if ($editable && $locked && $league->status === \App\Models\League::STATUS_YET_TO_START)
     @php

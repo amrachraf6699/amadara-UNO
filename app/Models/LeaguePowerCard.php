@@ -13,7 +13,7 @@ class LeaguePowerCard extends Model
     public const TYPES = [self::STEAL, self::GUARD, self::BOOST];
 
     protected $fillable = [
-        'league_id', 'user_id', 'card_type', 'target_user_id', 'target_player_id', 'replacement_player_id',
+        'league_id', 'season_id', 'user_id', 'card_type', 'target_user_id', 'target_player_id', 'replacement_player_id',
         'resolution_status', 'resolution_reason', 'resolution_data',
     ];
 

@@ -14,7 +14,7 @@ class LeagueSimulation extends Model
     public const FAILED = 'failed';
 
     protected $fillable = [
-        'league_id', 'status', 'prompt_version', 'prompt_hash', 'model', 'generation_options',
+        'league_id', 'season_id', 'status', 'prompt_version', 'prompt_hash', 'model', 'generation_options',
         'request_payload_hash', 'raw_response', 'normalized_response', 'validation_errors',
         'attempt_count', 'started_at', 'completed_at', 'failed_at',
     ];
@@ -25,6 +25,7 @@ class LeagueSimulation extends Model
     ];
 
     public function league(): BelongsTo { return $this->belongsTo(League::class); }
+    public function season(): BelongsTo { return $this->belongsTo(LeagueSeason::class, 'season_id'); }
     public function matches(): HasMany { return $this->hasMany(LeagueMatch::class, 'simulation_id'); }
     public function standings(): HasMany { return $this->hasMany(LeagueStanding::class, 'simulation_id'); }
 }

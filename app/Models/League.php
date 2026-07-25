@@ -43,6 +43,7 @@ class League extends Model
         'icon',
         'owner_id',
         'status',
+        'current_season_id',
     ];
 
     protected static function booted(): void
@@ -86,6 +87,8 @@ class League extends Model
     public function simulations(): HasMany { return $this->hasMany(LeagueSimulation::class); }
     public function matches(): HasMany { return $this->hasMany(LeagueMatch::class); }
     public function standings(): HasMany { return $this->hasMany(LeagueStanding::class); }
+    public function seasons(): HasMany { return $this->hasMany(LeagueSeason::class); }
+    public function currentSeason(): BelongsTo { return $this->belongsTo(LeagueSeason::class, 'current_season_id'); }
 
     public static function generateUniqueCode(): string
     {

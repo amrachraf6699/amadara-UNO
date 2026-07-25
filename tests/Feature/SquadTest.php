@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\League;
 use App\Models\User;
 use App\Services\PowerCardResolver;
+use App\Services\LeagueSeasonService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use App\Http\Middleware\VerifyCsrfToken;
@@ -103,6 +104,22 @@ class SquadTest extends TestCase
         $this->actingAs($user)->postJson(route('squads.store', $league), $this->payload())->assertOk();
         $this->assertDatabaseHas('league_player_reservations', ['league_id' => $league->id, 'user_id' => $user->id, 'player_id' => 1, 'slot_key' => 'goalkeeper']);
         $this->assertNotNull(\DB::table('league_player_reservations')->where(['league_id' => $league->id, 'player_id' => 1])->value('locked_at'));
+    }
+
+    public function test_next_season_allows_three_catalogue_transfers_and_reactivates_cards(): void
+    {
+        $owner = User::factory()->create(); $opponent = User::factory()->create(); $league = League::factory()->create(['owner_id' => $owner->id]); $league->users()->attach([$owner->id, $opponent->id]);
+        $this->actingAs($owner)->postJson(route('squads.store', $league), $this->payload())->assertOk();
+        $this->actingAs($opponent)->postJson(route('squads.store', $league), $this->payload(offset: 12))->assertOk();
+        $this->actingAs($owner)->postJson(route('cards.store', $league), ['card_type' => 'guard', 'target_player_id' => 1])->assertCreated();
+        $firstSeason = app(LeagueSeasonService::class)->current($league->fresh());
+        app(PowerCardResolver::class)->resolve($league->fresh(), $firstSeason);
+        $next = app(LeagueSeasonService::class)->openNext($firstSeason);
+
+        foreach ([[1, 25], [2, 26], [3, 27]] as [$outgoing, $incoming]) $this->actingAs($owner)->postJson(route('leagues.transfers.store', $league), ['outgoing_player_id' => $outgoing, 'incoming_player_id' => $incoming])->assertOk();
+        $this->actingAs($owner)->postJson(route('leagues.transfers.store', $league), ['outgoing_player_id' => 4, 'incoming_player_id' => 28])->assertStatus(422);
+        $this->assertDatabaseHas('league_season_selections', ['season_id' => $next->id, 'user_id' => $owner->id, 'player_id' => 25]);
+        $this->actingAs($owner)->postJson(route('cards.store', $league), ['card_type' => 'guard', 'target_player_id' => 25])->assertCreated();
     }
 
     public function test_search_reads_from_teams_json_without_http_requests(): void

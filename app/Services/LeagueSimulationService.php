@@ -22,9 +22,11 @@ class LeagueSimulationService
 
     public function prepare(League $league): LeagueSimulation
     {
-        $this->cards->resolve($league);
-        return DB::transaction(function () use ($league): LeagueSimulation {
-            $simulation = $league->simulations()->create(['status' => LeagueSimulation::PENDING, 'prompt_version' => SimulationPromptBuilder::VERSION]);
+        $season = app(LeagueSeasonService::class)->current($league);
+        app(LeagueSeasonService::class)->ensureRoster($season);
+        $this->cards->resolve($league, $season);
+        return DB::transaction(function () use ($league, $season): LeagueSimulation {
+            $simulation = $league->simulations()->create(['season_id' => $season->id, 'status' => LeagueSimulation::PENDING, 'prompt_version' => SimulationPromptBuilder::VERSION]);
             $members = $league->users()->orderBy('users.id')->get();
             foreach ($members as $leftIndex => $left) {
                 for ($rightIndex = $leftIndex + 1; $rightIndex < $members->count(); $rightIndex++) {
@@ -94,7 +96,8 @@ class LeagueSimulationService
         $boost = $simulation->league->powerCards()->where('card_type', LeaguePowerCard::BOOST)->where('user_id', $home)->where('target_user_id', $away)->where('resolution_status', 'applied')->first();
         $simulation->matches()->create([
             'league_id' => $simulation->league_id,
-            'fixture_id' => "league:{$simulation->league_id}:{$home}:{$away}:leg{$leg}",
+            'season_id' => $simulation->season_id,
+            'fixture_id' => ($simulation->season?->number > 1 ? "season:{$simulation->season_id}:" : '')."league:{$simulation->league_id}:{$home}:{$away}:leg{$leg}",
             'home_user_id' => $home,
             'away_user_id' => $away,
             'leg' => $leg,
@@ -177,6 +180,7 @@ class LeagueSimulationService
             foreach ($standings as $userId => $standing) $simulation->standings()->updateOrCreate(['user_id' => $userId], ['league_id' => $simulation->league_id, ...$standing]);
             $simulation->update(['status' => LeagueSimulation::COMPLETED, 'normalized_response' => $result, 'completed_at' => now()]);
             $simulation->league()->update(['status' => League::STATUS_FINISHED]);
+            app(LeagueSeasonService::class)->openNext($simulation->season);
         });
     }
 

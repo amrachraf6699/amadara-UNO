@@ -5,6 +5,7 @@
 
 @php
   $simulationInProgress = $league->simulations()->whereIn('status', [\App\Models\LeagueSimulation::PENDING, \App\Models\LeagueSimulation::RUNNING])->exists();
+  $seasons = $league->seasons()->orderByDesc('number')->get();
   $standings = $simulation?->standings->sortByDesc(fn($standing) => [$standing->points, $standing->goal_difference, $standing->goals_for])->values() ?? collect();
   $matches = $simulation?->matches->sortBy('id')->values() ?? collect();
   $winner = $standings->first();
@@ -33,6 +34,7 @@
     <div class="mt-6 flex flex-wrap items-end justify-between gap-5">
       <div>
         <h1 class="mt-2 text-4xl font-bold tracking-[-.04em] font-extrabold uppercase text-uno-lime">{{ $league->name }}</h1>
+        <p class="mt-2 text-sm font-bold text-white/55">Season {{ $season->number }} · {{ str_replace('_', ' ', $season->status) }}</p>
       </div>
       <div class="league-header-actions"><div class="league-copy-actions"><button type="button" data-copy-value="{{ $league->code }}" data-copy-label="League code" class="league-icon-action" title="Copy league code"><span class="league-icon-action-glyph"><i class="bx bx-clipboard"></i></span><span class="league-icon-action-label">Code</span></button><button type="button" data-copy-value="{{ route('dashboard.index', ['join' => $league->code]) }}" data-copy-label="Invitation link" class="league-icon-action" title="Copy invitation link" aria-label="Copy invitation link"><span class="league-icon-action-glyph"><i class="bx bx-user-plus"></i></span><span class="league-icon-action-label">Invite</span></button></div><span
           class="league-status-pill">{{ $simulationInProgress ? 'Simulation in progress' : ucfirst(str_replace('_', ' ', $league->status)) }}</span>@if (!$simulation && $league->owner_id === auth()->id() && $league->status === \App\Models\League::STATUS_YET_TO_START && !$simulationInProgress && $league->readyUsers->count() === $league->users->count() && $league->users->isNotEmpty())
@@ -40,6 +42,7 @@
                 class="league-start-action"><i class="bx bx-play-circle"></i><span>Start league</span></button></form>@endif
       </div>
     </div>
+    @if ($seasons->count() > 1)<label class="mt-5 block max-w-xs text-xs font-bold text-white/55">View season<select class="mt-2 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-2 text-sm text-white" onchange="location.href=this.value">@foreach($seasons as $seasonOption)<option value="{{ route('leagues.show', ['league' => $league, 'season' => $seasonOption->id]) }}" @selected($seasonOption->id === $season->id)>Season {{ $seasonOption->number }}</option>@endforeach</select></label>@endif
 
     @if (!$simulation)
       <section class="mt-8 grid gap-3 sm:grid-cols-3" aria-label="Match lobby status">

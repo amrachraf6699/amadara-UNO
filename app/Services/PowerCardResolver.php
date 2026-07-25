@@ -4,19 +4,22 @@ namespace App\Services;
 
 use App\Models\League;
 use App\Models\LeaguePowerCard;
+use App\Models\LeagueSeason;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 class PowerCardResolver
 {
-    public function resolve(League $league): array
+    public function resolve(League $league, ?LeagueSeason $season = null): array
     {
-        $league->load(['users', 'squads.selections']);
+        $season ??= app(LeagueSeasonService::class)->current($league);
+        app(LeagueSeasonService::class)->ensureRoster($season);
+        $league->load('users');
         $squads = [];
         foreach ($league->users as $user) {
-            $squad = $league->squads->firstWhere('user_id', $user->id);
-            if (! $squad) throw new RuntimeException('Every league member must have a locked squad.');
-            $squads[$user->id] = $squad->selections->mapWithKeys(fn ($selection) => [$selection->slot_key => [
+            $selections = $season->selections()->where('user_id', $user->id)->get();
+            if ($selections->isEmpty()) throw new RuntimeException('Every league member must have a locked squad.');
+            $squads[$user->id] = $selections->mapWithKeys(fn ($selection) => [$selection->slot_key => [
                 'player_id' => (int) $selection->player_id,
                 'player_data' => $selection->player_data,
                 'role' => $selection->role,
@@ -24,10 +27,10 @@ class PowerCardResolver
             ]])->all();
         }
 
-        $cards = $league->powerCards()->orderBy('id')->get();
+        $cards = $league->powerCards()->where('season_id', $season->id)->orderBy('id')->get();
         $guarded = $cards->where('card_type', LeaguePowerCard::GUARD)->pluck('target_player_id')->filter()->map(fn ($id) => (int) $id)->flip();
 
-        DB::transaction(function () use ($league, $cards, &$squads, $guarded): void {
+        DB::transaction(function () use ($league, $season, $cards, &$squads, $guarded): void {
             DB::table('league_card_resolutions')->where('league_id', $league->id)->delete();
             foreach ($cards as $card) {
                 $applied = true;
@@ -89,6 +92,7 @@ class PowerCardResolver
             foreach ($squads as $userId => $selections) {
                 foreach ($selections as $selection) {
                     $league->effectiveSelections()->create([
+                        'season_id' => $season->id,
                         'user_id' => $userId,
                         'player_id' => $selection['player_id'],
                         'player_data' => $selection['player_data'],

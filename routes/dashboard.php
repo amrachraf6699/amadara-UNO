@@ -13,6 +13,7 @@ Route::post('leagues/join', [LeagueController::class, 'join'])->name('leagues.jo
 Route::get('leagues/{league}', [LeagueController::class, 'show'])->name('leagues.show');
 Route::get('leagues/{league}/simulation-status', [LeagueController::class, 'simulationStatus'])->name('leagues.simulation.status');
 Route::post('leagues/{league}/ready', [LeagueController::class, 'ready'])->name('leagues.ready');
+Route::post('leagues/{league}/transfers', [LeagueController::class, 'transfer'])->name('leagues.transfers.store');
 Route::post('leagues/{league}/start', [LeagueController::class, 'start'])->name('leagues.start');
 Route::get('leagues/{league}/squad', [SquadController::class, 'show'])->name('squads.show');
 Route::get('leagues/{league}/members/{user}/squad', [SquadController::class, 'member'])->name('leagues.members.squad');

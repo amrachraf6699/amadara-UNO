@@ -10,6 +10,7 @@ use App\Models\SquadDraft;
 use App\Models\SquadSelection;
 use App\Models\User;
 use App\Services\TeamsCatalog;
+use App\Services\LeagueSeasonService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,11 +34,13 @@ class SquadController extends Controller
     public function show(Request $request, League $league): View
     {
         $this->authorizeMembership($request, $league);
+        $season = app(LeagueSeasonService::class)->current($league);
         $league->load(['users', 'squads.selections']);
         $squad = $request->user()->squads()->where('league_id', $league->id)->with('selections')->first();
         $draft = $squad ? null : $request->user()->squadDrafts()->where('league_id', $league->id)->first();
         $draftSelections = $draft ? $league->playerReservations()->where('user_id', $request->user()->id)->whereNull('locked_at')->get() : collect();
         if ($squad) $this->useEffectiveSelections($league, $squad, $request->user()->id);
+        if ($squad && $season->number > 1) $squad->setRelation('selections', $season->selections()->where('user_id', $request->user()->id)->get());
         $membership = $league->users()->whereKey($request->user()->id)->firstOrFail();
         $opponents = $league->users->reject(fn ($user) => $user->id === $request->user()->id)->map(function ($user) use ($league) {
             $squad = $league->squads->firstWhere('user_id', $user->id);
@@ -51,11 +54,13 @@ class SquadController extends Controller
             'draftSelections' => $draftSelections,
             'formations' => self::FORMATIONS,
             'reservedIds' => $league->playerReservations()->where('user_id', '!=', $request->user()->id)->pluck('player_id')->values(),
-            'ready' => (bool) $membership->pivot->ready_at,
+            'ready' => $season->readyEntries()->where('user_id', $request->user()->id)->exists(),
             'editable' => true,
             'viewedUser' => $request->user(),
-            'submittedCards' => $league->powerCards()->where('user_id', $request->user()->id)->get()->keyBy('card_type'),
+            'submittedCards' => $league->powerCards()->where('season_id', $season->id)->where('user_id', $request->user()->id)->get()->keyBy('card_type'),
             'opponents' => $opponents,
+            'season' => $season,
+            'transfersUsed' => $season->transfers()->where('user_id', $request->user()->id)->count(),
         ]);
     }
 
@@ -92,7 +97,8 @@ class SquadController extends Controller
 
         $more = (bool) ($validated['more'] ?? false);
         $result = $catalog->search(trim($validated['q']), (int) ($validated['page'] ?? 1), $more);
-        $reserved = $league->playerReservations()->where('user_id', '!=', $request->user()->id)->pluck('player_id')->map(fn ($id) => (int) $id);
+        $season = app(LeagueSeasonService::class)->current($league);
+        $reserved = $league->playerReservations()->where('user_id', '!=', $request->user()->id)->pluck('player_id')->merge($season->selections()->where('user_id', '!=', $request->user()->id)->pluck('player_id'))->map(fn ($id) => (int) $id);
         $players = collect($result['players'])->reject(fn (array $player) => $reserved->contains($player['id']));
 
         return response()->json([

@@ -12,7 +12,7 @@ class SimulationPromptBuilder
     public function payload(LeagueSimulation $simulation): array
     {
         $league = $simulation->league()->with(['users', 'squads'])->firstOrFail();
-        $selections = $league->effectiveSelections()->get()->groupBy('user_id');
+        $selections = $league->effectiveSelections()->where('season_id', $simulation->season_id)->get()->groupBy('user_id');
 
         $squads = $league->users->map(function ($user) use ($selections, $league): array {
             $teamSelections = $selections->get($user->id, collect());

@@ -95,7 +95,8 @@ class SimulationTest extends TestCase
 
         app(LeagueSimulationService::class)->run($simulation->fresh());
         $this->assertDatabaseHas('league_simulations', ['id' => $simulation->id, 'status' => LeagueSimulation::COMPLETED]);
-        $this->assertDatabaseHas('leagues', ['id' => $league->id, 'status' => League::STATUS_FINISHED]);
+        $this->assertDatabaseHas('leagues', ['id' => $league->id, 'status' => League::STATUS_YET_TO_START]);
+        $this->assertDatabaseHas('league_seasons', ['league_id' => $league->id, 'number' => 2, 'status' => \App\Models\LeagueSeason::TRANSFER_WINDOW]);
         $this->assertDatabaseCount('league_matches', 2);
         $this->assertDatabaseHas('league_standings', ['simulation_id' => $simulation->id, 'user_id' => $home->id, 'points' => 6]);
     }

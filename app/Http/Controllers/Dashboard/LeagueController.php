@@ -7,6 +7,12 @@ use App\Jobs\RunLeagueSimulation;
 use App\Models\League;
 use App\Models\LeagueSimulation;
 use App\Services\LeagueSimulationService;
+use App\Services\LeagueSeasonService;
+use App\Services\TeamsCatalog;
+use App\Models\LeagueSeason;
+use App\Models\LeagueSeasonSelection;
+use App\Models\LeagueSeasonTransfer;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,8 +36,11 @@ class LeagueController extends Controller
     public function show(Request $request, League $league): View
     {
         $this->authorizeMember($request, $league);
+        $currentSeason = app(LeagueSeasonService::class)->current($league);
+        $season = $league->seasons()->whereKey($request->integer('season', $currentSeason->id))->firstOrFail();
         $league->load(['users', 'readyUsers', 'squads', 'effectiveSelections']);
-        $simulation = $league->simulations()->where('status', LeagueSimulation::COMPLETED)->with(['standings.user', 'matches.homeUser', 'matches.awayUser'])->latest()->first();
+        $league->setRelation('effectiveSelections', $league->effectiveSelections->where('season_id', $season->id));
+        $simulation = $league->simulations()->where('season_id', $season->id)->where('status', LeagueSimulation::COMPLETED)->with(['standings.user', 'matches.homeUser', 'matches.awayUser'])->latest()->first();
         $league->users->each(fn ($member) => $member->setAttribute('name', $member->pivot->team_name ?: $member->name));
         $simulation?->standings->each(function ($standing) use ($league): void {
             $member = $league->users->firstWhere('id', $standing->user_id);
@@ -62,7 +71,7 @@ class LeagueController extends Controller
         });
         $scorerTotals = $scorerTotals->sortByDesc('goals')->values();
 
-        return view('dashboard.league-table', compact('league', 'simulation', 'scorerTotals'));
+        return view('dashboard.league-table', compact('league', 'simulation', 'scorerTotals', 'season', 'currentSeason'));
     }
 
     public function simulationStatus(Request $request, League $league): JsonResponse
@@ -142,9 +151,12 @@ class LeagueController extends Controller
     public function ready(Request $request, League $league): RedirectResponse|JsonResponse
     {
         $this->authorizeMember($request, $league);
+        $season = app(LeagueSeasonService::class)->current($league);
         if ($league->status !== League::STATUS_YET_TO_START) throw ValidationException::withMessages(['league' => 'This league is no longer waiting for players.']);
-        if (! $request->user()->squads()->where('league_id', $league->id)->exists()) throw ValidationException::withMessages(['squad' => 'Lock your squad before marking yourself ready.']);
+        app(LeagueSeasonService::class)->ensureRoster($season);
+        if (! $season->selections()->where('user_id', $request->user()->id)->exists()) throw ValidationException::withMessages(['squad' => 'Lock your squad before marking yourself ready.']);
 
+        $season->readyEntries()->updateOrCreate(['user_id' => $request->user()->id], ['ready_at' => now()]);
         $league->users()->updateExistingPivot($request->user()->id, ['ready_at' => now()]);
         if ($request->expectsJson()) {
             return response()->json(['message' => 'You are ready for the league.', 'redirect_url' => route('squads.show', $league)]);
@@ -158,20 +170,47 @@ class LeagueController extends Controller
         if ((int) $league->owner_id !== (int) $request->user()->id) throw ValidationException::withMessages(['league' => 'Only the league owner can start it.']);
         if ($league->status !== League::STATUS_YET_TO_START) throw ValidationException::withMessages(['league' => 'This league has already started.']);
 
+        $season = app(LeagueSeasonService::class)->current($league);
         $members = $league->users()->count();
-        $ready = $league->readyUsers()->count();
+        $ready = $season->readyEntries()->count();
+        // Keep Season 1 compatible with leagues/readiness created before the
+        // season tables existed. Later seasons use only their own readiness.
+        if ($season->number === 1) $ready = max($ready, $league->readyUsers()->count());
         if ($members === 0 || $members !== $ready) throw ValidationException::withMessages(['league' => 'Every league player must be ready before the league can start.']);
 
-        if ($league->simulations()->whereIn('status', [LeagueSimulation::PENDING, LeagueSimulation::RUNNING])->exists()) {
+        if ($season->simulations()->whereIn('status', [LeagueSimulation::PENDING, LeagueSimulation::RUNNING])->exists()) {
             throw ValidationException::withMessages(['league' => 'This league simulation is already being prepared.']);
         }
 
         $simulation = $simulationService->prepare($league);
+        $season->update(['status' => LeagueSeason::RUNNING, 'started_at' => now()]);
         RunLeagueSimulation::dispatch($simulation->id);
         if ($request->expectsJson()) {
             return response()->json(['message' => "{$league->name} is being simulated.", 'redirect_url' => route('leagues.show', $league)]);
         }
         return redirect()->route('leagues.show', $league)->with('status', "{$league->name} is being simulated.");
+    }
+
+    public function transfer(Request $request, League $league, TeamsCatalog $catalog): JsonResponse
+    {
+        $this->authorizeMember($request, $league);
+        $season = app(LeagueSeasonService::class)->current($league);
+        if ($season->status !== LeagueSeason::TRANSFER_WINDOW) throw ValidationException::withMessages(['transfer' => 'Transfers are available only between seasons.']);
+        if ($season->readyEntries()->where('user_id', $request->user()->id)->exists()) throw ValidationException::withMessages(['transfer' => 'You are already ready for this season.']);
+        if ($season->transfers()->where('user_id', $request->user()->id)->count() >= 3) throw ValidationException::withMessages(['transfer' => 'You have used all three transfers.']);
+        $data = $request->validate(['outgoing_player_id' => ['required', 'integer'], 'incoming_player_id' => ['required', 'integer', 'different:outgoing_player_id']]);
+        $incoming = $catalog->find((int) $data['incoming_player_id']);
+        if (! $incoming) throw ValidationException::withMessages(['incoming_player_id' => 'The selected player is invalid.']);
+        try {
+            DB::transaction(function () use ($season, $request, $data, $incoming): void {
+                $outgoing = $season->selections()->where('user_id', $request->user()->id)->where('player_id', $data['outgoing_player_id'])->lockForUpdate()->first();
+                if (! $outgoing) throw ValidationException::withMessages(['outgoing_player_id' => 'Choose a player from your current roster.']);
+                if ($season->selections()->where('player_id', $data['incoming_player_id'])->exists()) throw ValidationException::withMessages(['incoming_player_id' => 'That player is already selected by another team.']);
+                $outgoing->update(['player_id' => $data['incoming_player_id'], 'player_data' => $incoming]);
+                $season->transfers()->create(['user_id' => $request->user()->id, 'outgoing_player_id' => $data['outgoing_player_id'], 'incoming_player_id' => $data['incoming_player_id'], 'slot_key' => $outgoing->slot_key]);
+            });
+        } catch (\Illuminate\Database\QueryException) { return response()->json(['message' => 'That player was just selected by another team.', 'conflict_player_ids' => [(int) $data['incoming_player_id']]], 409); }
+        return response()->json(['message' => 'Transfer completed.', 'transfers_used' => $season->transfers()->where('user_id', $request->user()->id)->count()]);
     }
 
     /**

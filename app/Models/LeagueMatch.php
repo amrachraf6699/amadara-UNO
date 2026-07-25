@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class LeagueMatch extends Model
 {
     protected $fillable = [
-        'league_id', 'simulation_id', 'fixture_id', 'home_user_id', 'away_user_id', 'leg', 'status',
+        'league_id', 'season_id', 'simulation_id', 'fixture_id', 'home_user_id', 'away_user_id', 'leg', 'status',
         'home_score', 'away_score', 'goal_scorers', 'result', 'home_points', 'away_points', 'boost_user_id',
         'decisive_factors', 'player_impacts', 'narrative', 'raw_data',
     ];
