@@ -49,9 +49,9 @@ class LeagueSimulationService
         $model = config('gemini.models.text', env('GEMINI_TEXT_MODEL', 'gemini-2.0-flash'));
         $options = ['model' => $model, 'raw' => false, 'generationConfig' => [
             'temperature' => 0.2,
-            // Keep the response bounded so large leagues do not spend the entire
-            // HTTP timeout generating verbose match reports.
-            'maxOutputTokens' => 12000,
+            // Gemini includes thinking tokens in this budget. Six detailed
+            // fixtures for a three-player league exceed 12,000 tokens.
+            'maxOutputTokens' => (int) config('gemini.simulation_max_output_tokens', 32768),
             'responseMimeType' => 'application/json',
         ]];
         $simulation->update([

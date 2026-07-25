@@ -100,6 +100,22 @@ class SimulationTest extends TestCase
         $this->assertDatabaseHas('league_standings', ['simulation_id' => $simulation->id, 'user_id' => $home->id, 'points' => 6]);
     }
 
+    public function test_simulation_uses_the_extended_configured_output_token_budget(): void
+    {
+        config()->set('gemini.simulation_max_output_tokens', 32768);
+        [$league, $home, $away] = $this->leagueWithSquads();
+        $simulation = app(LeagueSimulationService::class)->prepare($league);
+        $output = ['simulation_version' => 'amadara-v2', 'league_id' => $league->id, 'assumptions' => [], 'player_evaluations' => [], 'matches' => $simulation->matches->map(fn ($match) => $this->richMatch($match, $home, $away))->all(), 'standings_projection' => [['user_id' => $home->id], ['user_id' => $away->id]]];
+
+        GeminiAi::shouldReceive('generateText')->once()->withArgs(function (string $prompt, array $options): bool {
+            return $options['generationConfig']['maxOutputTokens'] === 32768;
+        })->andReturn(json_encode($output));
+
+        app(LeagueSimulationService::class)->run($simulation->fresh());
+
+        $this->assertDatabaseHas('league_simulations', ['id' => $simulation->id, 'status' => LeagueSimulation::COMPLETED]);
+    }
+
     public function test_invalid_gemini_json_fails_without_publishing_results(): void
     {
         [$league] = $this->leagueWithSquads();

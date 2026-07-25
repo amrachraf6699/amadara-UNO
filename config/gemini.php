@@ -12,6 +12,9 @@ return [
     'timeout' => env('GEMINI_TIMEOUT', 120),
     'retries' => env('GEMINI_RETRIES', 1),
     'retry_delay' => env('GEMINI_RETRY_DELAY', 1000),
+    // A three-player double round robin requires six detailed match reports.
+    // Gemini counts hidden thinking tokens against this budget as well.
+    'simulation_max_output_tokens' => env('GEMINI_SIMULATION_MAX_OUTPUT_TOKENS', 32768),
     'log_requests' => env('GEMINI_LOG_REQUESTS', true),
     'log_response' => env('GEMINI_LOG_RESPONSE', true),
 ];
