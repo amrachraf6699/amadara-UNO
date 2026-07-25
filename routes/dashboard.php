@@ -17,6 +17,7 @@ Route::post('leagues/{league}/start', [LeagueController::class, 'start'])->name(
 Route::get('leagues/{league}/squad', [SquadController::class, 'show'])->name('squads.show');
 Route::get('leagues/{league}/members/{user}/squad', [SquadController::class, 'member'])->name('leagues.members.squad');
 Route::get('leagues/{league}/players/search', [SquadController::class, 'search'])->middleware('throttle:30,1')->name('squads.players.search');
+Route::put('leagues/{league}/squad/draft', [SquadController::class, 'syncDraft'])->name('squads.draft.sync');
 Route::post('leagues/{league}/squad', [SquadController::class, 'store'])->name('squads.store');
 Route::get('leagues/{league}/cards', [PowerCardController::class, 'index'])->name('cards.index');
 Route::post('leagues/{league}/cards', [PowerCardController::class, 'store'])->name('cards.store');

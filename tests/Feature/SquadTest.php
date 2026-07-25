@@ -70,7 +70,39 @@ class SquadTest extends TestCase
         $first = User::factory()->create(); $second = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach([$first->id, $second->id]);
         $this->actingAs($first)->postJson(route('squads.store', $league), $this->payload())->assertOk();
         $secondPayload = $this->payload(offset: 12); $secondPayload['players'][0]['player_id'] = 1;
-        $this->actingAs($second)->postJson(route('squads.store', $league), $secondPayload)->assertStatus(422);
+        $this->actingAs($second)->postJson(route('squads.store', $league), $secondPayload)->assertStatus(422)->assertJsonPath('conflict_player_ids.0', 1);
+    }
+
+    public function test_player_is_reserved_immediately_when_a_draft_is_saved(): void
+    {
+        $first = User::factory()->create(); $second = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach([$first->id, $second->id]);
+        $draft = ['formation' => '4-3-3', 'players' => [['slot' => 'goalkeeper', 'player_id' => 1]], 'coach_player_id' => null];
+
+        $this->actingAs($first)->putJson(route('squads.draft.sync', $league), $draft)->assertOk();
+        $this->assertDatabaseHas('league_player_reservations', ['league_id' => $league->id, 'user_id' => $first->id, 'player_id' => 1, 'slot_key' => 'goalkeeper', 'locked_at' => null]);
+        $this->assertDatabaseHas('squad_drafts', ['league_id' => $league->id, 'user_id' => $first->id, 'formation' => '4-3-3']);
+        $this->actingAs($first)->get(route('squads.show', $league))->assertOk()->assertSee('ring-red-400')->assertSee('conflict_player_ids');
+        $this->actingAs($second)->putJson(route('squads.draft.sync', $league), $draft)->assertStatus(409)->assertJsonPath('conflict_player_ids.0', 1);
+    }
+
+    public function test_replacing_a_draft_selection_releases_the_previous_player(): void
+    {
+        $user = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach($user);
+        $first = ['formation' => '4-3-3', 'players' => [['slot' => 'goalkeeper', 'player_id' => 1]], 'coach_player_id' => null];
+        $replacement = ['formation' => '4-3-3', 'players' => [['slot' => 'goalkeeper', 'player_id' => 2]], 'coach_player_id' => null];
+
+        $this->actingAs($user)->putJson(route('squads.draft.sync', $league), $first)->assertOk();
+        $this->actingAs($user)->putJson(route('squads.draft.sync', $league), $replacement)->assertOk();
+        $this->assertDatabaseMissing('league_player_reservations', ['league_id' => $league->id, 'player_id' => 1]);
+        $this->assertDatabaseHas('league_player_reservations', ['league_id' => $league->id, 'player_id' => 2, 'slot_key' => 'goalkeeper']);
+    }
+
+    public function test_locking_a_squad_marks_its_reservations_locked(): void
+    {
+        $user = User::factory()->create(); $league = League::factory()->create(); $league->users()->attach($user);
+        $this->actingAs($user)->postJson(route('squads.store', $league), $this->payload())->assertOk();
+        $this->assertDatabaseHas('league_player_reservations', ['league_id' => $league->id, 'user_id' => $user->id, 'player_id' => 1, 'slot_key' => 'goalkeeper']);
+        $this->assertNotNull(\DB::table('league_player_reservations')->where(['league_id' => $league->id, 'player_id' => 1])->value('locked_at'));
     }
 
     public function test_search_reads_from_teams_json_without_http_requests(): void

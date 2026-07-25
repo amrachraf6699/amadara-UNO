@@ -57,4 +57,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Squad::class);
     }
+
+    public function squadDrafts(): HasMany { return $this->hasMany(SquadDraft::class); }
 }
