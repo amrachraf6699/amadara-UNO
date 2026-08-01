@@ -12,6 +12,7 @@ class SimulationPromptBuilder
     public function payload(LeagueSimulation $simulation): array
     {
         $league = $simulation->league()->with(['users', 'squads'])->firstOrFail();
+        $season = $simulation->season()->firstOrFail();
         $selections = $league->effectiveSelections()->where('season_id', $simulation->season_id)->get()->groupBy('user_id');
 
         $squads = $league->users->map(function ($user) use ($selections, $league): array {
@@ -42,6 +43,11 @@ class SimulationPromptBuilder
         return [
             'simulation_version' => self::VERSION,
             'league' => ['id' => (int) $league->id, 'name' => $league->name, 'status' => $league->status],
+            'season_context' => [
+                'season_id' => (int) $season->id,
+                'season_number' => (int) $season->number,
+                'variation_seed' => hash('sha256', "amadara:{$league->id}:{$season->id}:{$simulation->id}"),
+            ],
             'squads' => $squads,
             'power_card_resolution' => DB::table('league_card_resolutions')->where('league_id', $league->id)->get()->map(fn ($row) => [
                 'power_card_id' => (int) $row->power_card_id,
@@ -67,7 +73,7 @@ class SimulationPromptBuilder
         return <<<PROMPT
 You are Amadara UNO's controlled football simulation engine. Simulate the complete league using only the supplied JSON. Fixture IDs, user IDs, player IDs, formations, coaches, rosters, slots, and resolved power-card decisions are authoritative; never invent them. Evaluate players at peak ability, not current age, form, injuries, or fame.
 
-Use realistic controlled variance. Establish the baseline from tactical fit, squad balance, chemistry, coach influence, home advantage, and power cards, then allow credible errors, momentum, set pieces, fatigue, cards, and late decisions to create upsets. Fame alone must never decide a match.
+Use realistic controlled variance. Establish the baseline from tactical fit, squad balance, chemistry, coach influence, home advantage, and power cards, then allow credible errors, momentum, set pieces, fatigue, cards, and late decisions to create upsets. Fame alone must never decide a match. The supplied season_context.variation_seed is mandatory: use it as the deterministic source of controlled variance for this season's fixtures. Generate a fresh outcome set for this season; do not replay the same scoreline pattern merely because the teams or fixture order resemble an earlier season.
 
 For each match consider coach identity and flexibility, formation strengths and weaknesses, build-up, pressing and press resistance, defensive-line height, width, midfield control, transitions, counter-attacks, set pieces, role suitability, shared-club and nationality links, positional familiarity, complementary roles, spacing, partnerships, coach-player fit, key battles, fatigue, cards, injuries, and adjustments after major events. Include believable substitutions and coach decisions using only supplied players.
 

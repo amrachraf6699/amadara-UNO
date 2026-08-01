@@ -81,6 +81,8 @@ class SimulationTest extends TestCase
         $this->assertNotEmpty($payload['squads'][0]['coach']);
         $this->assertNotEmpty($payload['squads'][0]['players']);
         $this->assertArrayHasKey('tactical_inputs', $payload['squads'][0]);
+        $this->assertSame(1, $payload['season_context']['season_number']);
+        $this->assertNotEmpty($payload['season_context']['variation_seed']);
         $this->assertStringContainsString('chemistry', app(SimulationPromptBuilder::class)->build($payload));
         $this->assertStringContainsString('tactical_analysis', app(SimulationPromptBuilder::class)->build($payload));
     }
@@ -99,6 +101,22 @@ class SimulationTest extends TestCase
         $this->assertDatabaseHas('league_seasons', ['league_id' => $league->id, 'number' => 2, 'status' => \App\Models\LeagueSeason::TRANSFER_WINDOW]);
         $this->assertDatabaseCount('league_matches', 2);
         $this->assertDatabaseHas('league_standings', ['simulation_id' => $simulation->id, 'user_id' => $home->id, 'points' => 6]);
+    }
+
+    public function test_each_season_receives_a_distinct_simulation_variation_seed(): void
+    {
+        [$league] = $this->leagueWithSquads();
+        $first = app(LeagueSimulationService::class)->prepare($league);
+        $firstPayload = app(SimulationPromptBuilder::class)->payload($first);
+        $firstSeason = app(\App\Services\LeagueSeasonService::class)->current($league->fresh());
+        app(\App\Services\LeagueSeasonService::class)->openNext($firstSeason);
+
+        $second = app(LeagueSimulationService::class)->prepare($league->fresh());
+        $secondPayload = app(SimulationPromptBuilder::class)->payload($second);
+
+        $this->assertSame(1, $firstPayload['season_context']['season_number']);
+        $this->assertSame(2, $secondPayload['season_context']['season_number']);
+        $this->assertNotSame($firstPayload['season_context']['variation_seed'], $secondPayload['season_context']['variation_seed']);
     }
 
     public function test_simulation_uses_the_extended_configured_output_token_budget(): void
