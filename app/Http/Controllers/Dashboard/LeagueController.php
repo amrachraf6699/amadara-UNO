@@ -39,7 +39,12 @@ class LeagueController extends Controller
         $currentSeason = app(LeagueSeasonService::class)->current($league);
         $season = $league->seasons()->whereKey($request->integer('season', $currentSeason->id))->firstOrFail();
         $league->load(['users', 'readyUsers', 'squads', 'effectiveSelections']);
-        $league->setRelation('effectiveSelections', $league->effectiveSelections->where('season_id', $season->id));
+        $seasonSelections = $league->effectiveSelections->where('season_id', $season->id);
+        // Older seasons created before seasonal effective selections were retained
+        // may no longer have a resolved snapshot. Their locked seasonal roster is
+        // still authoritative for displaying formations and player names.
+        if ($seasonSelections->isEmpty()) $seasonSelections = $season->selections()->get();
+        $league->setRelation('effectiveSelections', $seasonSelections);
         $simulation = $league->simulations()->where('season_id', $season->id)->where('status', LeagueSimulation::COMPLETED)->with(['standings.user', 'matches.homeUser', 'matches.awayUser'])->latest()->first();
         $league->users->each(fn ($member) => $member->setAttribute('name', $member->pivot->team_name ?: $member->name));
         $simulation?->standings->each(function ($standing) use ($league): void {

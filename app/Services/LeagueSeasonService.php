@@ -34,6 +34,7 @@ class LeagueSeasonService
             $next = LeagueSeason::firstOrCreate(['league_id' => $season->league_id, 'number' => $season->number + 1], ['status' => LeagueSeason::TRANSFER_WINDOW]);
             if (! $next->selections()->exists()) {
                 $source = $season->league->effectiveSelections()->where('season_id', $season->id)->get();
+                if ($source->isEmpty()) $source = $season->selections()->get();
                 foreach ($source as $selection) $next->selections()->create(['user_id' => $selection->user_id, 'player_id' => $selection->player_id, 'player_data' => $selection->player_data, 'slot_key' => $selection->slot_key, 'role' => $selection->role]);
             }
             $season->update(['status' => LeagueSeason::FINISHED, 'completed_at' => now()]);

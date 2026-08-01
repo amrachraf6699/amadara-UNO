@@ -221,4 +221,42 @@ class SimulationTest extends TestCase
             'fixture_id' => "league:{$league->id}:1:2:leg1",
         ]);
     }
+
+    public function test_historical_season_rosters_and_scorers_survive_later_seasons(): void
+    {
+        [$league, $home, $away] = $this->leagueWithSquads();
+        $first = app(\App\Services\LeagueSeasonService::class)->current($league->fresh());
+        app(\App\Services\PowerCardResolver::class)->resolve($league->fresh(), $first);
+        $scorer = $first->selections()->where('user_id', $home->id)->where('role', 'player')->firstOrFail();
+        $scorerName = $scorer->player_data['known_name'] ?? $scorer->player_data['name'];
+
+        $simulation = $league->simulations()->create(['season_id' => $first->id, 'status' => LeagueSimulation::COMPLETED]);
+        $simulation->matches()->create([
+            'league_id' => $league->id,
+            'season_id' => $first->id,
+            'fixture_id' => "season:{$first->id}:history-test",
+            'home_user_id' => $home->id,
+            'away_user_id' => $away->id,
+            'leg' => 1,
+            'status' => 'completed',
+            'home_score' => 1,
+            'away_score' => 0,
+            'result' => 'HOME_WIN',
+            'goal_scorers' => [['user_id' => $home->id, 'player_id' => $scorer->player_id, 'minute' => 12]],
+        ]);
+
+        $second = app(\App\Services\LeagueSeasonService::class)->openNext($first);
+        app(\App\Services\PowerCardResolver::class)->resolve($league->fresh(), $second);
+
+        $this->assertDatabaseHas('league_effective_selections', ['league_id' => $league->id, 'season_id' => $first->id, 'player_id' => $scorer->player_id]);
+        $this->assertDatabaseHas('league_effective_selections', ['league_id' => $league->id, 'season_id' => $second->id, 'player_id' => $scorer->player_id]);
+
+        // Simulate records removed by the old resolver. The locked seasonal
+        // snapshot must still render historical formations and scorer names.
+        $league->effectiveSelections()->where('season_id', $first->id)->delete();
+        $this->actingAs($home)->get(route('leagues.show', ['league' => $league, 'season' => $first->id]))
+            ->assertOk()
+            ->assertSee($scorerName)
+            ->assertDontSee('Unknown player');
+    }
 }

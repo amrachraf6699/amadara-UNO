@@ -88,7 +88,7 @@ class PowerCardResolver
                 ]);
             }
 
-            $league->effectiveSelections()->delete();
+            $league->effectiveSelections()->where('season_id', $season->id)->delete();
             foreach ($squads as $userId => $selections) {
                 foreach ($selections as $selection) {
                     $league->effectiveSelections()->create([
