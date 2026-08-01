@@ -9,6 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $this->ensureLeaguePlayerLookupIndex();
         $this->dropLegacyUniqueIndexes();
 
         Schema::table('league_effective_selections', function (Blueprint $table): void {
@@ -53,6 +54,25 @@ return new class extends Migration
 
         Schema::table('league_effective_selections', function (Blueprint $table) use ($indexNames): void {
             foreach ($indexNames as $indexName) $table->dropUnique($indexName);
+        });
+    }
+
+    private function ensureLeaguePlayerLookupIndex(): void
+    {
+        $indexName = 'les_league_player_lookup_index';
+
+        if (DB::getDriverName() === 'mysql') {
+            $exists = DB::table('information_schema.statistics')
+                ->where('table_schema', DB::raw('DATABASE()'))
+                ->where('table_name', 'league_effective_selections')
+                ->where('index_name', $indexName)
+                ->exists();
+
+            if ($exists) return;
+        }
+
+        Schema::table('league_effective_selections', function (Blueprint $table) use ($indexName): void {
+            $table->index(['league_id', 'player_id'], $indexName);
         });
     }
 };
