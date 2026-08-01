@@ -42,7 +42,30 @@
                 class="league-start-action"><i class="bx bx-play-circle"></i><span>Start league</span></button></form>@endif
       </div>
     </div>
-    @if ($seasons->count() > 1)<label class="mt-5 block max-w-xs text-xs font-bold text-white/55">View season<select class="mt-2 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-2 text-sm text-white" onchange="location.href=this.value">@foreach($seasons as $seasonOption)<option value="{{ route('leagues.show', ['league' => $league, 'season' => $seasonOption->id]) }}" @selected($seasonOption->id === $season->id)>Season {{ $seasonOption->number }}</option>@endforeach</select></label>@endif
+    @if ($seasons->count() > 1)
+      <section class="mt-6 rounded-2xl border border-white/10 bg-white/[.035] p-3 sm:p-4" aria-labelledby="season-switcher-title">
+        <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+          <div>
+            <p id="season-switcher-title" class="text-[10px] font-extrabold uppercase tracking-[.2em] text-uno-lime">Season archive</p>
+            <p class="mt-1 text-xs text-white/50">Browse past results or return to the current campaign.</p>
+          </div>
+          <span class="rounded-full border border-uno-lime/20 bg-uno-lime/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-uno-lime">Viewing season {{ $season->number }}</span>
+        </div>
+        <nav class="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="League seasons">
+          @foreach($seasons as $seasonOption)
+            @php $isSelectedSeason = $seasonOption->id === $season->id; @endphp
+            <a href="{{ route('leagues.show', ['league' => $league, 'season' => $seasonOption->id]) }}" data-spa-link @class([
+              'shrink-0 snap-start rounded-xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-uno-lime focus:ring-offset-2 focus:ring-offset-[#071d33]',
+              'border-uno-lime bg-uno-lime text-uno-navy shadow-lg shadow-uno-lime/10' => $isSelectedSeason,
+              'border-white/10 bg-[#071d33]/70 text-white/65 hover:border-white/30 hover:bg-white/10 hover:text-white' => ! $isSelectedSeason,
+            ]) @if($isSelectedSeason) aria-current="page" @endif>
+              <span class="block text-sm font-extrabold">Season {{ $seasonOption->number }}</span>
+              <span class="mt-0.5 block text-[10px] font-bold uppercase tracking-wider {{ $isSelectedSeason ? 'text-uno-navy/65' : 'text-white/40' }}">{{ str_replace('_', ' ', $seasonOption->status) }}</span>
+            </a>
+          @endforeach
+        </nav>
+      </section>
+    @endif
 
     @if (!$simulation)
       <section class="mt-8 grid gap-3 sm:grid-cols-3" aria-label="Match lobby status">
