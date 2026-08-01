@@ -48,6 +48,7 @@ class LeagueTest extends TestCase
         $response->assertOk();
         $response->assertSee('My League');
         $response->assertDontSee('Other League');
+        $response->assertSee('data-league-url="'.route('squads.show', $memberLeague).'"', false);
     }
 
     public function test_dashboard_pages_return_spa_fragments_without_the_app_shell(): void

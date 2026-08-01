@@ -51,7 +51,7 @@
             </thead>
             <tbody>@foreach ($leagues as $league)
               @php $readyPercent = $league->users_count ? round(($league->ready_users_count / $league->users_count) * 100) : 0; @endphp
-              <tr data-league-row data-league-url="{{ route('leagues.show', $league) }}" tabindex="0" role="link">
+              <tr data-league-row data-league-url="{{ route('squads.show', $league) }}" tabindex="0" role="link">
                 <td><span class="dashboard-league-name"><span class="hud-icon-frame dashboard-league-icon"><i
                         class="{{ $league->icon }}"></i></span><span class="min-w-0"><strong
                         class="block truncate">{{ $league->name }}</strong><small
