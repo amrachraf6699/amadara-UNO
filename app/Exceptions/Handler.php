@@ -3,6 +3,9 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -25,6 +28,12 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
             //
+        });
+
+        $this->renderable(function (HttpExceptionInterface $exception, Request $request): ?RedirectResponse {
+            if ($exception->getStatusCode() !== 403 || $request->expectsJson() || ! $request->is('dashboard/leagues/*')) return null;
+
+            return redirect()->route('dashboard.index')->with('error', 'You are not a member of that league.');
         });
     }
 }

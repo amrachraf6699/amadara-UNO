@@ -77,6 +77,20 @@ class LeagueTest extends TestCase
         $response->assertOk()->assertSee('bx-clipboard')->assertSee('bx-user-plus')->assertSee('data-copy-value="'.$league->code.'"', false)->assertSee('join='.$league->code, false);
     }
 
+    public function test_non_members_are_redirected_to_the_dashboard_when_visiting_a_league(): void
+    {
+        $user = User::factory()->create();
+        $league = League::factory()->create();
+
+        $this->actingAs($user)->get(route('leagues.show', $league))
+            ->assertRedirect(route('dashboard.index'))
+            ->assertSessionHas('error', 'You are not a member of that league.');
+        $this->actingAs($user)->get(route('squads.show', $league))
+            ->assertRedirect(route('dashboard.index'))
+            ->assertSessionHas('error', 'You are not a member of that league.');
+        $this->actingAs($user)->getJson(route('leagues.show', $league))->assertForbidden();
+    }
+
     public function test_user_can_create_a_league_and_is_added_as_a_member(): void
     {
         $user = User::factory()->create();
