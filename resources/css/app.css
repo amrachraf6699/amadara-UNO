@@ -235,6 +235,12 @@
       .hud-results table.results-table th, .hud-results table.results-table td { display: table-cell; min-height: 0; padding: .75rem .85rem; white-space: nowrap; }
       .hud-results table.results-table td::before { content: none; }
     }
+    .season-switcher { overflow-x: auto; overscroll-behavior-x: contain; scroll-padding-inline: .75rem; touch-action: pan-x; -webkit-overflow-scrolling: touch; }
+    .season-switcher > a { flex: 0 0 auto; text-align: left; }
+    @media (max-width: 720px) {
+      .hud-results .season-switcher { overflow-x: auto; }
+      .hud-results .season-switcher > a { min-width: 9.25rem; }
+    }
     @media (max-width: 420px) {
       header nav { padding-left: .75rem; padding-right: .75rem; }
       header nav > a { gap: .45rem; }

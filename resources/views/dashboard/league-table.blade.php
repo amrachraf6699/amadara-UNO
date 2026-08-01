@@ -51,7 +51,7 @@
           </div>
           <span class="rounded-full border border-uno-lime/20 bg-uno-lime/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-uno-lime">Viewing season {{ $season->number }}</span>
         </div>
-        <nav class="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="League seasons">
+        <nav class="season-switcher -mx-3 mt-3 flex snap-x snap-mandatory gap-2 px-3 pb-2 sm:mx-0 sm:px-0" aria-label="League seasons">
           @foreach($seasons as $seasonOption)
             @php $isSelectedSeason = $seasonOption->id === $season->id; @endphp
             <a href="{{ route('leagues.show', ['league' => $league, 'season' => $seasonOption->id]) }}" data-spa-link @class([
