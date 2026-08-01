@@ -48,11 +48,6 @@
 
   <section class="hud-progress-strip mt-5" aria-label="Squad progression"><div class="hud-progress-step {{ ! $locked ? 'is-current' : 'is-complete' }}"><span>01</span><strong>Build squad</strong><small>{{ $locked ? 'Complete' : 'In progress' }}</small></div><div class="hud-progress-line"></div><div class="hud-progress-step {{ $locked ? 'is-complete' : '' }}"><span>02</span><strong>Lock formation</strong><small>{{ $locked ? 'Locked' : 'Pending' }}</small></div><div class="hud-progress-line"></div><div class="hud-progress-step {{ $ready ? 'is-complete' : ($locked ? 'is-current' : '') }}"><span>03</span><strong>Ready up</strong><small>{{ $ready ? 'Ready' : ($locked ? 'Waiting' : 'Locked') }}</small></div></section>
 
-  @if ($season?->status === \App\Models\LeagueSeason::TRANSFER_WINDOW && $editable)
-    <section class="mt-6 glass-panel rounded-3xl p-5 sm:p-7"><div class="flex items-center justify-between gap-3"><div><p class="hud-kicker">Season {{ $season->number }} transfer window</p><h2 class="mt-2 text-xl font-black">Transfers used: {{ $transfersUsed }} / 3</h2></div><i class="bx bx-transfer-alt text-3xl text-uno-lime"></i></div>@if($transfersUsed < 3)<form id="transferForm" class="mt-5 grid gap-3 sm:grid-cols-2"><select name="outgoing_player_id" required class="rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-sm text-white"><option value="">Replace a current player</option>@foreach($squad->selections as $selection)<option value="{{ $selection->player_id }}">{{ $selection->player_data['known_name'] ?? $selection->player_data['name'] }}</option>@endforeach</select><input id="transferSearch" type="search" placeholder="Search incoming player" class="rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white"><input type="hidden" name="incoming_player_id" required><button type="submit" class="rounded-xl bg-uno-lime px-4 py-3 text-sm font-extrabold text-uno-navy sm:col-span-2">Complete transfer</button></form><div id="transferResults" class="mt-3 grid gap-2"></div>@else<p class="mt-4 text-sm text-white/55">You have used all three transfers this season.</p>@endif</section>
-    <script>(() => { const form=document.getElementById('transferForm'), search=document.getElementById('transferSearch'), results=document.getElementById('transferResults'); if(!form) return; let timer; search.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(async()=>{if(search.value.trim().length<3)return results.innerHTML='';const u=new URL(@json(route('squads.players.search',$league)),location.origin);u.searchParams.set('q',search.value);const d=await fetch(u,{headers:{Accept:'application/json'}}).then(r=>r.json());results.innerHTML=(d.results||[]).map(p=>`<button type="button" data-id="${p.id}" class="rounded-xl border border-white/10 p-3 text-left hover:border-uno-lime">${p.known_name||p.name}</button>`).join('');},250)});results.addEventListener('click',e=>{const b=e.target.closest('[data-id]');if(!b)return;form.incoming_player_id.value=b.dataset.id;search.value=b.textContent;results.innerHTML='';});form.addEventListener('submit',async e=>{e.preventDefault();const r=await fetch(@json(route('leagues.transfers.store',$league)),{method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]')?.content,'Accept':'application/json'},body:new FormData(form)});const d=await r.json();if(!r.ok)return window.showToast?.(d.message||'Transfer failed.','error');window.showToast?.(d.message);location.reload();});})();</script>
-  @endif
-
   @if ($editable && $locked && $league->status === \App\Models\League::STATUS_YET_TO_START)
     @php
       $powerCards = [
@@ -69,6 +64,9 @@
             @php $card = $submittedCards->get($type); @endphp
             <button type="button" data-power-card-open="{{ $type }}" aria-pressed="{{ $card ? 'true' : 'false' }}" class="power-card-dock-card {{ $card ? 'is-activated' : '' }}" title="Open {{ $powerCard['label'] }} card"><i class="{{ $powerCard['icon'] }}"></i><strong>{{ $powerCard['label'] }}</strong><small>{{ $card ? 'Activated' : 'Play card' }}</small></button>
           @endforeach
+          @if ($season?->status === \App\Models\LeagueSeason::TRANSFER_WINDOW)
+            <button type="button" data-transfer-open class="power-card-dock-card {{ $transfersUsed >= 3 ? 'is-activated' : '' }}" title="Open transfers"><i class="bx bx-transfer-alt"></i><strong>Transfers</strong><small>{{ $transfersUsed }} / 3</small></button>
+          @endif
           </div>
         </div>
       </div>
@@ -102,6 +100,25 @@
         </div>
       </div>
     </div>
+
+    @if ($season?->status === \App\Models\LeagueSeason::TRANSFER_WINDOW)
+      <div id="transferModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#020b15]/85 px-4 py-6 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="transferModalTitle">
+        <div class="power-card-modal-panel max-h-full w-full max-w-lg overflow-y-auto rounded-[30px] p-5 shadow-uno sm:p-7">
+          <div class="flex items-start justify-between gap-4"><div><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Season {{ $season->number }} transfer window</p><h2 id="transferModalTitle" class="mt-2 text-2xl font-black">Make a transfer</h2><p class="mt-2 text-sm text-white/50">{{ $transfersUsed }} of 3 transfers used this season.</p></div><button type="button" data-transfer-close class="text-2xl text-white/45 hover:text-white" aria-label="Close"><i class="bx bx-x"></i></button></div>
+          @if($transfersUsed < 3)
+            <form id="transferForm" class="mt-6 grid gap-3 sm:grid-cols-2">
+              <label class="sm:col-span-2"><span class="text-xs font-bold text-white/60">Player to replace</span><select name="outgoing_player_id" required class="mt-2 w-full rounded-xl border border-white/10 bg-[#071d33] px-3 py-3 text-sm text-white"><option value="">Choose a current player</option>@foreach($squad->selections->where('role', 'player') as $selection)<option value="{{ $selection->player_id }}">{{ $selection->player_data['known_name'] ?? $selection->player_data['name'] }}</option>@endforeach</select></label>
+              <label class="sm:col-span-2"><span class="text-xs font-bold text-white/60">New player</span><input id="transferSearch" type="search" autocomplete="off" placeholder="Search by player name" class="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white" aria-describedby="transferSearchHint"><span id="transferSearchHint" class="mt-2 block text-xs text-white/40">Type at least three letters, then choose a player.</span></label>
+              <input type="hidden" name="incoming_player_id" required>
+              <div id="transferResults" class="grid gap-2 sm:col-span-2"></div>
+              <button type="submit" class="rounded-xl bg-uno-lime px-4 py-3 text-sm font-extrabold text-uno-navy transition hover:bg-white sm:col-span-2">Complete transfer</button>
+            </form>
+          @else
+            <div class="mt-6 rounded-2xl border border-uno-lime/30 bg-uno-lime/10 px-4 py-4 text-sm font-bold text-uno-lime"><i class="bx bx-check-circle mr-1"></i> You have used all three transfers this season.</div>
+          @endif
+        </div>
+      </div>
+    @endif
 
     <section class="legacy-power-cards mt-6 glass-panel rounded-3xl p-5 sm:p-6">
       <div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-extrabold uppercase tracking-[.2em] text-uno-lime">Power cards</p><h2 class="mt-2 text-xl font-bold">Choose your advantage.</h2></div><p class="text-xs text-white/40">Each card can be submitted once before Ready.</p></div>
@@ -162,6 +179,58 @@
           button.disabled = false;
         }
       }));
+
+      const transferModal = document.getElementById('transferModal');
+      const closeTransfer = () => { transferModal?.classList.add('hidden'); transferModal?.classList.remove('flex'); document.body.classList.remove('modal-open'); };
+      document.querySelectorAll('[data-transfer-open]').forEach((card) => card.addEventListener('click', () => { transferModal?.classList.remove('hidden'); transferModal?.classList.add('flex'); document.body.classList.add('modal-open'); }));
+      document.querySelectorAll('[data-transfer-close]').forEach((button) => button.addEventListener('click', closeTransfer));
+      transferModal?.addEventListener('click', (event) => { if (event.target === transferModal) closeTransfer(); });
+      document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeTransfer(); });
+
+      const transferForm = document.getElementById('transferForm');
+      const transferSearch = document.getElementById('transferSearch');
+      const transferResults = document.getElementById('transferResults');
+      if (transferForm && transferSearch && transferResults) {
+        let transferTimer;
+        transferSearch.addEventListener('input', () => {
+          clearTimeout(transferTimer);
+          transferTimer = setTimeout(async () => {
+            if (transferSearch.value.trim().length < 3) { transferResults.innerHTML = ''; return; }
+            try {
+              const url = new URL(@json(route('squads.players.search', $league)), location.origin);
+              url.searchParams.set('q', transferSearch.value);
+              const response = await fetch(url, { headers: { Accept: 'application/json' } });
+              const data = await response.json();
+              if (!response.ok) throw new Error(data.message || 'Search unavailable.');
+              transferResults.innerHTML = (data.results || []).map((player) => `<button type="button" data-transfer-player-id="${player.id}" class="rounded-xl border border-white/10 bg-white/5 p-3 text-left text-sm font-bold text-white transition hover:border-uno-lime hover:bg-uno-lime/10">${player.known_name || player.name}</button>`).join('') || '<p class="py-3 text-sm text-white/45">No available players found.</p>';
+            } catch (error) {
+              transferResults.innerHTML = `<p class="py-3 text-sm text-red-300">${error.message}</p>`;
+            }
+          }, 250);
+        });
+        transferResults.addEventListener('click', (event) => {
+          const player = event.target.closest('[data-transfer-player-id]');
+          if (!player) return;
+          transferForm.incoming_player_id.value = player.dataset.transferPlayerId;
+          transferSearch.value = player.textContent.trim();
+          transferResults.innerHTML = '';
+        });
+        transferForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const button = transferForm.querySelector('button[type="submit"]');
+          if (button) button.disabled = true;
+          try {
+            const response = await fetch(@json(route('leagues.transfers.store', $league)), { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content, Accept: 'application/json' }, body: new FormData(transferForm) });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || Object.values(data.errors || {}).flat()[0] || 'Transfer failed.');
+            window.showToast?.(data.message || 'Transfer completed.');
+            location.reload();
+          } catch (error) {
+            window.showToast?.(error.message, 'error');
+            if (button) button.disabled = false;
+          }
+        });
+      }
     </script>
   @endif
 

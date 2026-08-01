@@ -115,6 +115,7 @@ class SquadTest extends TestCase
         $firstSeason = app(LeagueSeasonService::class)->current($league->fresh());
         app(PowerCardResolver::class)->resolve($league->fresh(), $firstSeason);
         $next = app(LeagueSeasonService::class)->openNext($firstSeason);
+        $this->actingAs($owner)->get(route('squads.show', $league))->assertOk()->assertSee('data-transfer-open', false)->assertSee('Transfers')->assertSee('0 / 3');
 
         foreach ([[1, 25], [2, 26], [3, 27]] as [$outgoing, $incoming]) $this->actingAs($owner)->postJson(route('leagues.transfers.store', $league), ['outgoing_player_id' => $outgoing, 'incoming_player_id' => $incoming])->assertOk();
         $this->actingAs($owner)->postJson(route('leagues.transfers.store', $league), ['outgoing_player_id' => 4, 'incoming_player_id' => 28])->assertStatus(422);
